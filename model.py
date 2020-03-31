@@ -25,12 +25,21 @@ class VirusModelAgent(Agent):
         self.type = agent_type
 
     def step(self):  # step function
-        for neighbor in self.model.grid.neighbor_iter(self.pos):
+        # Built-in get_neighbors function returns a list of neighbors.
+        # Two types of cell neighborhoods: Moore (including diagonals), and
+        # Von Neumann (only up/down/left/right).
+        # Can include an argument as to whether to include the center cell itself as one of the neighbors.
+        neighbors = self.model.grid.get_neighbors(
+             self.pos,
+             moore=False, # uses Von Neumann neighborhoods
+             include_center=False)
+        for neighbor in neighbors:
+            # if your neighbor is infected, you become infected
             if neighbor.type == 0:
                 self.type = 0
         if self.type == 0:
-            self.model.infected_count += 1
-            self.model.infected_percent = self.model.infected_count / self.model.agent_count
+            self.model.infected_count += 1 # updates count of infected agents
+            self.model.infected_percent = self.model.infected_count / self.model.agent_count # updates percentage of infected agents
 
 class Virus(Model):
     '''
@@ -38,21 +47,25 @@ class Virus(Model):
     '''
 
     def __init__(self, height=20, width=20, density=0.3, infected_seed_pc=0.05):
+        # model is seeded with default parameters for density and infected seed percent
+        # can also change defaults with user settable parameter slider in GUI
         '''
         '''
 
-        self.height = height
+        self.height = height # height and width of grid
         self.width = width
-        self.density = density
+        self.density = density # density of agents in grid space
         self.infected_seed_pc = infected_seed_pc # percent of infected agents at start of simulation
 
-        self.schedule = RandomActivation(self)
-        self.grid = SingleGrid(width, height, torus=True)
+        self.schedule = RandomActivation(self) # controls the order that agents are activated and step
+        self.grid = SingleGrid(width, height, torus=True) # specify only one agent per cell
+        # can use multigrid if we need multiple agents per cell
 
         self.infected_count = 0
         self.infected_percent = 0
         self.agent_count = 1 # to avoid divide by 0 error
 
+        # uses DataCollector built in module to collect data from each model run
         self.datacollector = DataCollector(
             {"infected_percent": "infected_percent"},
             {"x": lambda m: m.pos[0], "y": lambda m: m.pos[1]})

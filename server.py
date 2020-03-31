@@ -7,19 +7,20 @@ from model import Virus
 
 class InfectedElement(TextElement):
     '''
-    Display the percentage infected agents.
+    Display the percentage infected agents on visualization web page
     '''
 
     def __init__(self):
         pass
 
     def render(self, model):
-        return "Percent infected agents: " + str(model.infected_percent * 100)
+        return "Percent infected agents: " + str(round((model.infected_percent * 100), 2))
+        # rounds displayed percentage to 2 decimal places
 
 
 def virus_draw(agent):
     '''
-    Portrayal Method for canvas
+    Portrayal Method for canvas. Let's to watch the model work in real time.
     '''
     if agent is None:
         return
@@ -42,6 +43,7 @@ model_params = {
     "height": 20,
     "width": 20,
     "density": UserSettableParameter("slider", "Agent density", 0.3, 0.1, 1.0, 0.1),
+    # 0.3 = hardcoded starting density, options from 0.1 to 1.0 with steps of 0.1
     "infected_seed_pc": UserSettableParameter("slider", "Initial fraction infected", 0.05, 0.00, 1.0, 0.01),
 }
 
