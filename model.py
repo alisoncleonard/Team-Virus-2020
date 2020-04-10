@@ -1,12 +1,7 @@
 # to run with model, run, and server files, use terminal command $ mesa runserver
 
-# My test model only has 2 types: susceptible and infectious
-# on each step, if any neighbors are infectious then you become infectious
-
-
 from mesa import Model, Agent
 from mesa.time import RandomActivation
-from mesa.space import SingleGrid
 from mesa.datacollection import DataCollector
 from mesa.space import MultiGrid
 
@@ -39,11 +34,12 @@ class VirusModelAgent(Agent):
         self.model.grid.move_agent(self, new_position)
 
     def step(self):  # step function
+        self.move() # calls move method first before checking status of neighbors
+
         # Built-in get_neighbors function returns a list of neighbors.
         # Two types of cell neighborhoods: Moore (including diagonals), and
         # Von Neumann (only up/down/left/right).
         # Can include an argument as to whether to include the center cell itself as one of the neighbors.
-
         if self.compartment == "susceptible":
             neighbors = self.model.grid.get_neighbors(
                  self.pos,
@@ -81,9 +77,7 @@ class Virus(Model):
         self.infectious_seed_pc = infectious_seed_pc # percent of infectious agents at start of simulation
 
         self.schedule = RandomActivation(self) # controls the order that agents are activated and step
-        self.grid = MultiGrid(width, height, torus=True) # specify only one agent per cell
-        # can use multigrid if we need multiple agents per cell
-
+        self.grid = MultiGrid(width, height, torus=True) # multiple agents per cell
 
 #        neighbors = []
 #        x, y = self.pos
@@ -115,7 +109,7 @@ class Virus(Model):
                     agent_compartment = "susceptible"
 
                 agent = VirusModelAgent((x, y), self, agent_compartment)
-                self.grid.position_agent(agent, (x, y))
+                self.grid.place_agent(agent, (x, y))
                 self.schedule.add(agent)
 
         self.running = True
