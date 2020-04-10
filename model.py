@@ -3,10 +3,12 @@
 # My test model only has 2 types: susceptible and infectious
 # on each step, if any neighbors are infectious then you become infectious
 
+
 from mesa import Model, Agent
 from mesa.time import RandomActivation
 from mesa.space import SingleGrid
 from mesa.datacollection import DataCollector
+from mesa.space import MultiGrid
 
 LENGTH_OF_DISEASE = 14 #days
 INCUBATION_PERIOD = 5 #days
@@ -28,11 +30,20 @@ class VirusModelAgent(Agent):
         self.compartment = agent_compartment
         self.infection_timeline = 0
 
+    def move(self):
+        possible_steps = self.model.grid.get_neighborhood(
+            self.pos,
+            moore=False,
+            include_center=False)
+        new_position = self.random.choice(possible_steps)
+        self.model.grid.move_agent(self, new_position)
+
     def step(self):  # step function
         # Built-in get_neighbors function returns a list of neighbors.
         # Two types of cell neighborhoods: Moore (including diagonals), and
         # Von Neumann (only up/down/left/right).
         # Can include an argument as to whether to include the center cell itself as one of the neighbors.
+
         if self.compartment == "susceptible":
             neighbors = self.model.grid.get_neighbors(
                  self.pos,
@@ -70,11 +81,19 @@ class Virus(Model):
         self.infectious_seed_pc = infectious_seed_pc # percent of infectious agents at start of simulation
 
         self.schedule = RandomActivation(self) # controls the order that agents are activated and step
-        self.grid = SingleGrid(width, height, torus=True) # specify only one agent per cell
+        self.grid = MultiGrid(width, height, torus=True) # specify only one agent per cell
         # can use multigrid if we need multiple agents per cell
+
+
+#        neighbors = []
+#        x, y = self.pos
+#        for dx in [-1, 0, 1]:
+#            for dy in [-1, 0, 1]:
+#                neighbors.append((x+dx, y+dy))
 
         self.infectious_count = 0
         self.infectious_percent = 0
+
         self.agent_count = 1 # to avoid divide by 0 error
 
         # uses DataCollector built in module to collect data from each model run
@@ -100,6 +119,7 @@ class Virus(Model):
                 self.schedule.add(agent)
 
         self.running = True
+
 
     def step(self):
         '''
