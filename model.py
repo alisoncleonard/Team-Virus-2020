@@ -3,10 +3,12 @@
 # My test model only has 2 types: susceptible and infected
 # on each step, if any neighbors are infected then you become infected
 
+
 from mesa import Model, Agent
 from mesa.time import RandomActivation
 from mesa.space import SingleGrid
 from mesa.datacollection import DataCollector
+from mesa.space import MultiGrid
 
 class VirusModelAgent(Agent):
     '''
@@ -24,15 +26,24 @@ class VirusModelAgent(Agent):
         self.pos = pos
         self.type = agent_type
 
+    def move(self):
+        possible_steps = self.model.grid.get_neighborhood(
+            self.pos,
+            moore=False,
+            include_center=False)
+        new_position = self.random.choice(possible_steps)
+        self.model.grid.move_agent(self, new_position)
+
     def step(self):  # step function
         # Built-in get_neighbors function returns a list of neighbors.
         # Two types of cell neighborhoods: Moore (including diagonals), and
         # Von Neumann (only up/down/left/right).
         # Can include an argument as to whether to include the center cell itself as one of the neighbors.
+
         neighbors = self.model.grid.get_neighbors(
-             self.pos,
-             moore=False, # uses Von Neumann neighborhoods
-             include_center=False)
+            self.pos,
+            moore=False, # uses Von Neumann neighborhoods
+            include_center=False)
         for neighbor in neighbors:
             # if your neighbor is infected, you become infected
             if neighbor.type == 0:
@@ -40,6 +51,9 @@ class VirusModelAgent(Agent):
         if self.type == 0:
             self.model.infected_count += 1 # updates count of infected agents
             self.model.infected_percent = self.model.infected_count / self.model.agent_count # updates percentage of infected agents
+        self.move()
+
+
 
 class Virus(Model):
     '''
@@ -58,8 +72,14 @@ class Virus(Model):
         self.infected_seed_pc = infected_seed_pc # percent of infected agents at start of simulation
 
         self.schedule = RandomActivation(self) # controls the order that agents are activated and step
-        self.grid = SingleGrid(width, height, torus=True) # specify only one agent per cell
+        self.grid = MultiGrid(width, height, torus=True) # specify only one agent per cell
         # can use multigrid if we need multiple agents per cell
+
+#        neighbors = []
+#        x, y = self.pos
+#        for dx in [-1, 0, 1]:
+#            for dy in [-1, 0, 1]:
+#                neighbors.append((x+dx, y+dy))
 
         self.infected_count = 0
         self.infected_percent = 0
@@ -84,10 +104,11 @@ class Virus(Model):
                     agent_type = 1
 
                 agent = VirusModelAgent((x, y), self, agent_type)
-                self.grid.position_agent(agent, (x, y))
+                self.grid.place_agent(agent, (x, y))
                 self.schedule.add(agent)
 
         self.running = True
+
 
     def step(self):
         '''
