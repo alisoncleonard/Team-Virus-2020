@@ -65,9 +65,11 @@ class VirusModelAgent(Agent):
             elif "infectious" in self.compartment: # includes both infectious_symptomatic and infectious_asymptomatic
                 self.infection_timeline += 1 # adds day to infection time
                 self.model.infectious_count += 1 # updates count of infectious agents
-                self.model.infectious_percent = self.model.infectious_count / self.model.agent_count # updates percentage of infectious agents
+                #self.model.infectious_percent = self.model.infectious_count / self.model.agent_count # updates percentage of infectious agents
                 if self.infection_timeline > LENGTH_OF_DISEASE:
                     self.compartment = self.getsDead()
+                    if self.compartment == "recovered":
+                        self.model.recovered_count += 1
         else: # self.compartment == dead
             self.model.dead_count += 1 #updates count of dead agents
 
@@ -124,22 +126,23 @@ class Virus(Model):
         self.schedule = RandomActivation(self) # controls the order that agents are activated and step
         self.grid = MultiGrid(width, height, torus=True) # multiple agents per cell
 
-#        neighbors = []
-#        x, y = self.pos
-#        for dx in [-1, 0, 1]:
-#            for dy in [-1, 0, 1]:
-#                neighbors.append((x+dx, y+dy))
-
         self.infectious_count = 0
-        self.infectious_percent = 0
+        #self.infectious_percent = 0
         self.dead_count = 0
         self.susceptible_count = 0
-
-        self.agent_count = 1 # to avoid divide by 0 error
+        self.recovered_count = 0
+        self.agent_count = 0
 
         # uses DataCollector built in module to collect data from each model run
-        self.datacollector = DataCollector(
-                {"infectious_count": "infectious_count"},
+        self.s_datacollector = DataCollector(
+                {"susceptible": "susceptible_count"},
+                {"x": lambda m: m.pos[0], "y": lambda m: m.pos[1]})
+
+        self.i_datacollector = DataCollector(
+                {"infectious": "infectious_count"},
+                {"x": lambda m: m.pos[0], "y": lambda m: m.pos[1]})
+        self.r_datacollector = DataCollector(
+                {"recovered": "recovered_count"},
                 {"x": lambda m: m.pos[0], "y": lambda m: m.pos[1]})
 
         # Set up agents
@@ -174,13 +177,15 @@ class Virus(Model):
         Run one step of the model. If all agents are happy, halt the model.
         '''
         self.infectious_count = 0  # Reset counters each step
-        self.infectious_percent = 0
+        #self.infectious_percent = 0
         self.dead_count = 0
         self.susceptible_count = 0
         self.agent_count = self.schedule.get_agent_count()
         self.schedule.step()
         # collect data
-        self.datacollector.collect(self)
+        self.s_datacollector.collect(self)
+        self.i_datacollector.collect(self)
+        self.r_datacollector.collect(self)
 
         # run until no more agents are infectious
         if self.infectious_count == 0:
