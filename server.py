@@ -16,6 +16,17 @@ class SusceptibleElement(TextElement):
     def render(self, model):
         return "Susceptible agents: " + str(model.susceptible_count)
 
+class ExposedElement(TextElement):
+    '''
+    Display the number of exposed agents on visualization web page
+    '''
+
+    def __init__(self):
+        pass
+
+    def render(self, model):
+        return "Exposed agents: " + str(model.exposed_count)
+
 class InfectiousElement(TextElement):
     '''
     Display the total infectious agents on visualization web page
@@ -86,14 +97,16 @@ def virus_draw(agent):
     return portrayal
 
 susceptible_element = SusceptibleElement()
+exposed_element = ExposedElement()
 infectious_element = InfectiousElement()
 recovered_element = RecoveredElement()
 dead_element = DeadElement()
 agent_count_element = AgentCountElement()
 canvas_element = CanvasGrid(virus_draw, 20, 20, 500, 500)
-s_chart = ChartModule([{"Label": "susceptible", "Color": "Black"}], data_collector_name='s_datacollector')
-i_chart = ChartModule([{"Label": "infectious", "Color": "Black"}], data_collector_name='i_datacollector')
-r_chart = ChartModule([{"Label": "recovered", "Color": "Black"}], data_collector_name='r_datacollector')
+s_chart = ChartModule([{"Label": "susceptible", "Color": "#107AB0"}], data_collector_name='s_datacollector')
+e_chart = ChartModule([{"Label": "exposed", "Color": "#FDC1C5"}], data_collector_name='e_datacollector')
+i_chart = ChartModule([{"Label": "infectious", "Color": "#FD5956"}], data_collector_name='i_datacollector')
+r_chart = ChartModule([{"Label": "recovered", "Color": "#730039"}], data_collector_name='r_datacollector')
 
 model_params = {
     "height": 20,
@@ -106,7 +119,7 @@ model_params = {
 
 server = ModularServer(Virus,
                        [canvas_element, agent_count_element,
-                       susceptible_element, infectious_element,
-                       recovered_element, dead_element,
-                       s_chart, i_chart, r_chart],
+                       susceptible_element, exposed_element,
+                       infectious_element, recovered_element, dead_element,
+                       s_chart, e_chart, i_chart, r_chart],
                        "Team Virus: COVID-19", model_params)

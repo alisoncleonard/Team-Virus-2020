@@ -59,6 +59,7 @@ class VirusModelAgent(Agent):
                     if "infectious" in neighbor.compartment: # includes both infectious_symptomatic and infectious_asymptomatic
                         self.compartment = self.getsInfected(neighbor)
             elif self.compartment == "exposed":
+                self.model.exposed_count += 1
                 self.infection_timeline += 1 # adds day to infection time
                 if self.infection_timeline > INCUBATION_PERIOD:
                     self.compartment = self.getsSymptoms()
@@ -130,6 +131,7 @@ class Virus(Model):
         self.infectious_percent = 0
         self.dead_count = 0
         self.susceptible_count = 0
+        self.exposed_count = 0
         self.recovered_count = 0
         self.agent_count = 0
 
@@ -167,6 +169,11 @@ class Virus(Model):
                 {"x": lambda m: m.pos[0], "y": lambda m: m.pos[1]})
         self.s_datacollector.collect(self)
 
+        self.e_datacollector = DataCollector(
+                {"exposed": "exposed_count"},
+                {"x": lambda m: m.pos[0], "y": lambda m: m.pos[1]})
+        self.e_datacollector.collect(self)
+
         self.i_datacollector = DataCollector(
                 {"infectious": "infectious_count"},
                 {"x": lambda m: m.pos[0], "y": lambda m: m.pos[1]})
@@ -188,13 +195,16 @@ class Virus(Model):
         #self.infectious_percent = 0
         self.dead_count = 0
         self.susceptible_count = 0
+        self.exposed_count = 0
+        self.exposed_count = 0
         self.agent_count = self.schedule.get_agent_count()
         self.schedule.step()
         # collect data
         self.s_datacollector.collect(self)
+        self.e_datacollector.collect(self)
         self.i_datacollector.collect(self)
         self.r_datacollector.collect(self)
 
         # run until no more agents are infectious
-        if self.infectious_count == 0:
+        if self.infectious_count == 0 and self.exposed_count ==0:
             self.running = False
