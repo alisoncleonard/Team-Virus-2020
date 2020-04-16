@@ -4,7 +4,7 @@ from mesa import Model, Agent
 from mesa.time import RandomActivation
 from mesa.datacollection import DataCollector
 from mesa.space import MultiGrid
-#import distributions
+import distributions
 
 LENGTH_OF_DISEASE = 14 #days
 INCUBATION_PERIOD = 5 #days
@@ -127,23 +127,11 @@ class Virus(Model):
         self.grid = MultiGrid(width, height, torus=True) # multiple agents per cell
 
         self.infectious_count = 0
-        #self.infectious_percent = 0
+        self.infectious_percent = 0
         self.dead_count = 0
         self.susceptible_count = 0
         self.recovered_count = 0
         self.agent_count = 0
-
-        # uses DataCollector built in module to collect data from each model run
-        self.s_datacollector = DataCollector(
-                {"susceptible": "susceptible_count"},
-                {"x": lambda m: m.pos[0], "y": lambda m: m.pos[1]})
-
-        self.i_datacollector = DataCollector(
-                {"infectious": "infectious_count"},
-                {"x": lambda m: m.pos[0], "y": lambda m: m.pos[1]})
-        self.r_datacollector = DataCollector(
-                {"recovered": "recovered_count"},
-                {"x": lambda m: m.pos[0], "y": lambda m: m.pos[1]})
 
         # Set up agents
         # We use a grid iterator that returns
@@ -154,6 +142,8 @@ class Virus(Model):
             y = cell[2]
             if self.random.random() < self.density:
 
+                self.agent_count += 1
+
                 if self.random.random() < self.high_risk_pc:
                     risk_group = "high"
                 else:
@@ -162,12 +152,30 @@ class Virus(Model):
                 if self.random.random() < self.infectious_seed_pc:
                     agent_compartment = random.choices(["infectious_asymptomatic", "infectious_symptomatic"],
                                                         [0.15, 0.85])[0]
+                    self.infectious_count += 1
                 else:
                     agent_compartment = "susceptible"
+                    self.susceptible_count += 1
 
                 agent = VirusModelAgent((x, y), self, agent_compartment, risk_group)
                 self.grid.place_agent(agent, (x, y))
                 self.schedule.add(agent)
+
+        # uses DataCollector built in module to collect data from each model run
+        self.s_datacollector = DataCollector(
+                {"susceptible": "susceptible_count"},
+                {"x": lambda m: m.pos[0], "y": lambda m: m.pos[1]})
+        self.s_datacollector.collect(self)
+
+        self.i_datacollector = DataCollector(
+                {"infectious": "infectious_count"},
+                {"x": lambda m: m.pos[0], "y": lambda m: m.pos[1]})
+        self.i_datacollector.collect(self)
+
+        self.r_datacollector = DataCollector(
+                {"recovered": "recovered_count"},
+                {"x": lambda m: m.pos[0], "y": lambda m: m.pos[1]})
+        self.r_datacollector.collect(self)
 
         self.running = True
 
