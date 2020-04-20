@@ -193,7 +193,7 @@ class Virus(Model):
                 if self.random.random() < self.infectious_seed_pc:
                     # From Joshua Weitz paper
                     # Basic epi parameters, 0.1% total prevalence
-                    # (95% asymptomatic, 5% symptomatic)
+                    # (90% asymptomatic, 10% symptomatic)
                     agent_compartment = random.choices(["infectious_asymptomatic", "infectious_symptomatic"],
                                                         [(1.0 - FRACTION_SYMPTOMATIC), FRACTION_SYMPTOMATIC])[0]
                     self.infectious_count += 1
