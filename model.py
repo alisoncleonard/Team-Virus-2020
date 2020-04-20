@@ -195,7 +195,7 @@ class Virus(Model):
                     # Basic epi parameters, 0.1% total prevalence
                     # (95% asymptomatic, 5% symptomatic)
                     agent_compartment = random.choices(["infectious_asymptomatic", "infectious_symptomatic"],
-                                                        [0.95, 0.05])[0]
+                                                        [(1.0 - FRACTION_SYMPTOMATIC), FRACTION_SYMPTOMATIC])[0]
                     self.infectious_count += 1
                 else:
                     agent_compartment = "susceptible"
