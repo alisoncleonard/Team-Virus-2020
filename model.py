@@ -13,10 +13,10 @@ SYMPTOMATIC_PERIOD = 10 #days
 FRACTION_SYMPTOMATIC = 0.1
 FRACTION_HI_RISK = 0.25
 INFECTIOUS_PREVALENCE = 0.01
-LOW_RISK_ASYMP_TRANSMISSION = 0.25
-HI_RISK_ASYMP_TRANSMISSION = 0.35
-LOW_RISK_SYMP_TRANSMISSION = 0.5
-HI_RISK_SYMP_TRANSMISSION = 0.7
+LOW_RISK_ASYMP_TRANSMISSION = 0.25 #agent is low-risk, infectious neighbor is asymptomatic
+HI_RISK_ASYMP_TRANSMISSION = 0.35 #agent is high-risk, infectious neighbor is asymptomatic
+LOW_RISK_SYMP_TRANSMISSION = 0.5 #agent is low-risk, infectious neighbor is symptomatic
+HI_RISK_SYMP_TRANSMISSION = 0.7 #agent is high-risk, infectious neighbor is symptomatic
 
 # Other assumptions of model, based on CO state stats
 HI_RISK_DEATH_RATE = 0.15
