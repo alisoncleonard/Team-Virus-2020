@@ -4,10 +4,23 @@ from mesa import Model, Agent
 from mesa.time import RandomActivation
 from mesa.datacollection import DataCollector
 from mesa.space import MultiGrid
-import distributions
+import scipy.stats
 
-LENGTH_OF_DISEASE = 14 #days
-INCUBATION_PERIOD = 5 #days
+# Assumptions of model, from Joshua Weitz
+EXPOSED_PERIOD = 4 #days
+ASYMPTOMATIC_PERIOD = 6 #days
+SYMPTOMATIC_PERIOD = 10 #days
+FRACTION_SYMPTOMATIC = 0.1
+FRACTION_HI_RISK = 0.25
+INFECTIOUS_PREVALENCE = 0.01
+LOW_RISK_ASYMP_TRANSMISSION = 0.25
+HI_RISK_ASYMP_TRANSMISSION = 0.35
+LOW_RISK_SYMP_TRANSMISSION = 0.5
+HI_RISK_SYMP_TRANSMISSION = 0.7
+
+# Other assumptions of model, based on CO state stats
+HI_RISK_DEATH_RATE = 0.15
+LOW_RISK_DEATH_RATE = 0.01
 
 class VirusModelAgent(Agent):
     '''
@@ -22,7 +35,7 @@ class VirusModelAgent(Agent):
             compartment: String indicating the agent's compartment
                         (susceptible, exposed, infectious_symptomatic,
                         infectious_asymptomatic, recovered, dead)
-            risk_group: Low (younger, healthy) or high (older, immunocompromised)
+            risk_group: low (younger, healthy) or high (older, immunocompromised)
             infection_timeline: days since infected (includes non-infectious period)
         '''
         super().__init__(pos, model)
@@ -61,16 +74,14 @@ class VirusModelAgent(Agent):
             elif self.compartment == "exposed":
                 self.model.exposed_count += 1
                 self.infection_timeline += 1 # adds day to infection time
-                if self.infection_timeline > INCUBATION_PERIOD:
-                    self.compartment = self.getsSymptoms()
+                self.compartment = self.getsSymptoms()
             elif "infectious" in self.compartment: # includes both infectious_symptomatic and infectious_asymptomatic
                 self.infection_timeline += 1 # adds day to infection time
                 self.model.infectious_count += 1 # updates count of infectious agents
                 #self.model.infectious_percent = self.model.infectious_count / self.model.agent_count # updates percentage of infectious agents
-                if self.infection_timeline > LENGTH_OF_DISEASE:
-                    self.compartment = self.getsDead()
-                    if self.compartment == "recovered":
-                        self.model.recovered_count += 1
+                self.compartment = self.getsDead()
+                if self.compartment == "recovered":
+                    self.model.recovered_count += 1
         else: # self.compartment == dead
             self.model.dead_count += 1 #updates count of dead agents
 
@@ -79,9 +90,15 @@ class VirusModelAgent(Agent):
         Determines if, given the neighbor's infectious state, the agent gets infected
         '''
         if neighbor.compartment == "infectious_symptomatic":
-            transmissionProb = 0.9
+            if self.risk_group == "high":
+                transmissionProb = HI_RISK_SYMP_TRANSMISSION
+            else: #self.risk_group == "low"
+                transmissionProb = LOW_RISK_SYMP_TRANSMISSION
         else: #neighbor.compartment == "infectious_asymptomatic"
-            transmissionProb = 0.5
+            if self.risk_group == "high":
+                transmissionProb = HI_RISK_ASYMP_TRANSMISSION
+            else: #self.risk_group == "low"
+                transmissionProb = LOW_RISK_ASYMP_TRANSMISSION
         updatedCompartment = random.choices(["susceptible", "exposed"],
                                             [(1.0 - transmissionProb), transmissionProb])[0]
         return updatedCompartment
@@ -90,7 +107,11 @@ class VirusModelAgent(Agent):
         '''
         Determines if the agent becomes symptomatic or asymptomatic infectious
         '''
-        symptomaticProb = 0.85
+        # Calculates CDF of seeing agent's infection timeline given
+        # mean exposure of EXPOSED_PERIOD days with standard deviation of 1 day
+        symptomaticProb = scipy.stats.norm.cdf(self.infection_timeline, EXPOSED_PERIOD, 1)
+        # Using calculated probability, pulls updated compartment status from
+        # Bernoulli distribution
         updatedCompartment = random.choices(["infectious_asymptomatic", "infectious_symptomatic"],
                                             [(1.0 - symptomaticProb), symptomaticProb])[0]
         return updatedCompartment
@@ -99,10 +120,28 @@ class VirusModelAgent(Agent):
         '''
         Determines if, given agent's risk group, the agent dies
         '''
-        if self.risk_group == "high":
-            deathProb = 0.30
-        else: #self.risk_group == "low"
-            deathProb = 0.01
+        if self.compartment == "infectious_symptomatic":
+            switchCompProb = scipy.stats.norm.cdf(self.infection_timeline, SYMPTOMATIC_PERIOD, 1)
+            switchComp = random.choices(["switch", "infectious_symptomatic"],
+                                        [switchCompProb, (1.0 - switchCompProb)])[0]
+            if switchComp != "switch":
+                return switchComp
+            else:
+                if self.risk_group == "high":
+                    deathProb = HI_RISK_DEATH_RATE
+                else: #self.risk_group == "low"
+                    deathProb = LOW_RISK_DEATH_RATE
+        else: #self.compartment == "infectious_asymptomatic"
+            switchCompProb = scipy.stats.norm.cdf(self.infection_timeline, ASYMPTOMATIC_PERIOD, 1)
+            switchComp = random.choices(["switch", "infectious_asymptomatic"],
+                                        [switchCompProb, (1.0 - switchCompProb)])[0]
+            if switchComp != "switch":
+                return switchComp
+            else:
+                if self.risk_group == "high":
+                    deathProb = HI_RISK_DEATH_RATE
+                else: #self.risk_group == "low"
+                    deathProb = LOW_RISK_DEATH_RATE
         updatedCompartment = random.choices(["recovered", "dead"],
                                             [(1.0 - deathProb), deathProb])[0]
         return updatedCompartment
@@ -112,7 +151,7 @@ class Virus(Model):
     Model class for the Virus model.
     '''
 
-    def __init__(self, height=20, width=20, density=0.3, infectious_seed_pc=0.05, high_risk_pc=0.25):
+    def __init__(self, height=20, width=20, density=0.3, infectious_seed_pc=INFECTIOUS_PREVALENCE, high_risk_pc=FRACTION_HI_RISK):
         # model is seeded with default parameters for density and infectious seed percent
         # can also change defaults with user settable parameter slider in GUI
         '''
@@ -152,8 +191,11 @@ class Virus(Model):
                     risk_group = "low"
 
                 if self.random.random() < self.infectious_seed_pc:
+                    # From Joshua Weitz paper
+                    # Basic epi parameters, 0.1% total prevalence
+                    # (95% asymptomatic, 5% symptomatic)
                     agent_compartment = random.choices(["infectious_asymptomatic", "infectious_symptomatic"],
-                                                        [0.15, 0.85])[0]
+                                                        [0.95, 0.05])[0]
                     self.infectious_count += 1
                 else:
                     agent_compartment = "susceptible"

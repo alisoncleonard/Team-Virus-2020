@@ -113,7 +113,7 @@ model_params = {
     "width": 20,
     "density": UserSettableParameter("slider", "Agent density", 0.3, 0.1, 1.0, 0.1),
     # 0.3 = hardcoded starting density, options from 0.1 to 1.0 with steps of 0.1
-    "infectious_seed_pc": UserSettableParameter("slider", "Initial fraction infectious", 0.05, 0.00, 1.0, 0.01),
+    "infectious_seed_pc": UserSettableParameter("slider", "Initial fraction infectious", 0.01, 0.00, 1.0, 0.01),
     "high_risk_pc": UserSettableParameter("slider", "Percentage high-risk agents", 0.25, 0.00, 1.0, 0.05)
 }
 
