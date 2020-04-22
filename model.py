@@ -4,6 +4,8 @@ from mesa import Model, Agent
 from mesa.time import RandomActivation
 from mesa.datacollection import DataCollector
 from mesa.space import MultiGrid
+import numpy as np
+import random
 
 LENGTH_OF_DISEASE = 14 #days
 INCUBATION_PERIOD = 5 #days
@@ -12,7 +14,7 @@ class VirusModelAgent(Agent):
     '''
     Agent in virus model. Each agent is an individual person.
     '''
-    def __init__(self, pos, model, agent_compartment):
+    def __init__(self, pos, model, agent_compartment, unique_id):
         '''
          Create a new VirusModel agent.
          Args:
@@ -20,7 +22,7 @@ class VirusModelAgent(Agent):
             x, y: Agent initial location.
             agent_type: String indicating the agent's compartment (susceptible, exposed, infectious, recovered)
         '''
-        super().__init__(pos, model)
+        super().__init__(unique_id, model) # calling the agent class ___init___, inputs (unique_id, model)
         self.pos = pos
         self.compartment = agent_compartment
         self.infection_timeline = 0
@@ -32,6 +34,7 @@ class VirusModelAgent(Agent):
             include_center=False)
         new_position = self.random.choice(possible_steps)
         self.model.grid.move_agent(self, new_position)
+        self.pos = new_position
 
     def step(self):  # step function
         self.move() # calls move method first before checking status of neighbors
@@ -44,7 +47,7 @@ class VirusModelAgent(Agent):
             neighbors = self.model.grid.get_neighbors(
                  self.pos,
                  moore=False, # uses Von Neumann neighborhoods
-                 include_center=False)
+                 include_center=True) # KMB we think this is so you can infect people in the same cell
             for neighbor in neighbors:
                 # if your neighbor is infectious, you become infectious
                 if neighbor.compartment == "infectious":
@@ -60,12 +63,29 @@ class VirusModelAgent(Agent):
             if self.infection_timeline > LENGTH_OF_DISEASE:
                 self.compartment = "recovered"
 
+# Made houses agent for visualization
+class HouseAgent(Agent):
+    '''
+    House cell in virus model. Each agent is an individual person.
+    '''
+    def __init__(self, pos, model, unique_id):
+        '''
+         Create a new HouseAgent agent.
+         Args:
+            unique_id: Unique identifier for the agent.
+            x, y: Agent initial location.
+            agent_type: String indicating the agent's compartment (susceptible, exposed, infectious, recovered)
+        '''
+        super().__init__(unique_id, model) # calling the agent class ___init___, inputs (unique_id, model)
+        self.pos = pos
+        self.compartment = "house"
+
 class Virus(Model):
     '''
     Model class for the Virus model.
     '''
 
-    def __init__(self, height=20, width=20, density=0.3, infectious_seed_pc=0.05):
+    def __init__(self, height=20, width=20, density = 0.3, num_agents=100, infectious_seed_pc=0.05):
         # model is seeded with default parameters for density and infectious seed percent
         # can also change defaults with user settable parameter slider in GUI
         '''
@@ -73,7 +93,8 @@ class Virus(Model):
 
         self.height = height # height and width of grid
         self.width = width
-        self.density = density # density of agents in grid space
+        self.density = density
+        self.num_agents = num_agents # number of agents to initializse
         self.infectious_seed_pc = infectious_seed_pc # percent of infectious agents at start of simulation
 
         self.schedule = RandomActivation(self) # controls the order that agents are activated and step
@@ -96,21 +117,56 @@ class Virus(Model):
             {"x": lambda m: m.pos[0], "y": lambda m: m.pos[1]})
 
         # Set up agents
-        # We use a grid iterator that returns
-        # the coordinates of a cell as well as
-        # its contents. (coord_iter)
-        for cell in self.grid.coord_iter():
-            x = cell[1]
-            y = cell[2]
-            if self.random.random() < self.density:
-                if self.random.random() < self.infectious_seed_pc:
-                    agent_compartment = "infectious"
-                else:
-                    agent_compartment = "susceptible"
+        # First initialize vec defining number of agents per cell/house (between 1-4)
+        agents_per_cell = []
+        agents_sum = 0
 
-                agent = VirusModelAgent((x, y), self, agent_compartment)
+        while agents_sum < (num_agents-4):
+            agents_per_cell.append(random.randint(1,4))
+            agents_sum = sum(agents_per_cell)
+
+        while agents_sum != num_agents:
+            temp = num_agents - agents_sum
+            agents_per_cell.append(random.randint(1,temp))
+            agents_sum = sum(agents_per_cell)
+
+        # Now initialize these agents on the grid
+        person_id = 0
+        house_id = 2000
+
+        for cell in agents_per_cell:
+            x = self.random.randrange(self.grid.width)
+            y = self.random.randrange(self.grid.height)
+            house = HouseAgent((x,y), self, house_id)
+            self.grid.place_agent(house, (x, y))
+            self.schedule.add(house)
+            house_id+=1
+
+            for person in range(cell):
+                if self.random.random() < self.infectious_seed_pc:
+                        agent_compartment = "infectious"
+                else:
+                        agent_compartment = "susceptible"
+
+                agent = VirusModelAgent((x, y), self, agent_compartment, person_id)
                 self.grid.place_agent(agent, (x, y))
                 self.schedule.add(agent)
+                person_id += 1
+
+        #for person in range(self.num_agents):
+            #x = 2*np.mod(person, 4)
+            #y = 1
+            ##x = self.random.randrange(self.grid.width)
+            ##y = self.random.randrange(self.grid.height)
+
+            #if self.random.random() < self.infectious_seed_pc:
+            #        agent_compartment = "infectious"
+            #else:
+            #        agent_compartment = "susceptible"
+
+            #agent = VirusModelAgent((x, y), self, agent_compartment, person)
+            #self.grid.place_agent(agent, (x, y))
+            #self.schedule.add(agent)
 
         self.running = True
 
