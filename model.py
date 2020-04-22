@@ -5,6 +5,8 @@ from mesa.time import RandomActivation
 from mesa.datacollection import DataCollector
 from mesa.space import MultiGrid
 import scipy.stats
+import numpy as np
+import random
 
 # Assumptions of model, from Joshua Weitz
 EXPOSED_PERIOD = 4 #days
@@ -22,11 +24,13 @@ HI_RISK_SYMP_TRANSMISSION = 0.7 #agent is high-risk, infectious neighbor is symp
 HI_RISK_DEATH_RATE = 0.15
 LOW_RISK_DEATH_RATE = 0.01
 
+
 class VirusModelAgent(Agent):
     '''
     Agent in virus model. Each agent is an individual person.
     '''
-    def __init__(self, pos, model, agent_compartment, risk_group):
+    def __init__(self, pos, model, agent_compartment, risk_group, unique_id):
+
         '''
          Create a new VirusModel agent.
          Args:
@@ -38,7 +42,7 @@ class VirusModelAgent(Agent):
             risk_group: low (younger, healthy) or high (older, immunocompromised)
             infection_timeline: days since infected (includes non-infectious period)
         '''
-        super().__init__(pos, model)
+        super().__init__(unique_id, model) # calling the agent class ___init___, inputs (unique_id, model)
         self.pos = pos
         self.compartment = agent_compartment
         self.risk_group = risk_group
@@ -51,6 +55,7 @@ class VirusModelAgent(Agent):
             include_center=False)
         new_position = self.random.choice(possible_steps)
         self.model.grid.move_agent(self, new_position)
+        self.pos = new_position
 
     def step(self):  # step function
         if self.compartment == "susceptible":
@@ -146,12 +151,28 @@ class VirusModelAgent(Agent):
                                             [(1.0 - deathProb), deathProb])[0]
         return updatedCompartment
 
+# Made houses agent for visualization
+class HouseAgent(Agent):
+    '''
+    House cell in virus model. Each agent is an individual person.
+    '''
+    def __init__(self, pos, model, unique_id):
+        '''
+         Create a new HouseAgent agent.
+         Args:
+            unique_id: Unique identifier for the agent.
+            x, y: Agent initial location.
+            agent_type: String indicating the agent's compartment (susceptible, exposed, infectious, recovered)
+        '''
+        super().__init__(unique_id, model) # calling the agent class ___init___, inputs (unique_id, model)
+        self.pos = pos
+        self.compartment = "house"
+
 class Virus(Model):
     '''
     Model class for the Virus model.
     '''
-
-    def __init__(self, height=20, width=20, density=0.3, infectious_seed_pc=INFECTIOUS_PREVALENCE, high_risk_pc=FRACTION_HI_RISK):
+    def __init__(self, height=20, width=20, density = 0.3, num_agents=100, infectious_seed_pc=INFECTIOUS_PREVALENCE, high_risk_pc=FRACTION_HI_RISK)):
         # model is seeded with default parameters for density and infectious seed percent
         # can also change defaults with user settable parameter slider in GUI
         '''
@@ -159,7 +180,8 @@ class Virus(Model):
 
         self.height = height # height and width of grid
         self.width = width
-        self.density = density # density of agents in grid space
+        self.density = density
+        self.num_agents = num_agents # number of agents to initializse
         self.infectious_seed_pc = infectious_seed_pc # percent of infectious agents at start of simulation
         self.high_risk_pc = high_risk_pc # percent of agents catergorized as high risk for severe disease
 
@@ -175,14 +197,33 @@ class Virus(Model):
         self.agent_count = 0
 
         # Set up agents
-        # We use a grid iterator that returns
-        # the coordinates of a cell as well as
-        # its contents. (coord_iter)
-        for cell in self.grid.coord_iter():
-            x = cell[1]
-            y = cell[2]
-            if self.random.random() < self.density:
 
+        # First initialize vec defining number of agents per cell/house (between 1-4)
+        agents_per_cell = []
+        agents_sum = 0
+
+        while agents_sum < (num_agents-4):
+            agents_per_cell.append(random.randint(1,4))
+            agents_sum = sum(agents_per_cell)
+
+        while agents_sum != num_agents:
+            temp = num_agents - agents_sum
+            agents_per_cell.append(random.randint(1,temp))
+            agents_sum = sum(agents_per_cell)
+
+        # Now initialize these agents on the grid
+        person_id = 0
+        house_id = 2000
+
+        for cell in agents_per_cell:
+            x = self.random.randrange(self.grid.width)
+            y = self.random.randrange(self.grid.height)
+            house = HouseAgent((x,y), self, house_id)
+            self.grid.place_agent(house, (x, y))
+            self.schedule.add(house)
+            house_id+=1
+
+            for person in range(cell):
                 self.agent_count += 1
 
                 if self.random.random() < self.high_risk_pc:
@@ -201,9 +242,11 @@ class Virus(Model):
                     agent_compartment = "susceptible"
                     self.susceptible_count += 1
 
-                agent = VirusModelAgent((x, y), self, agent_compartment, risk_group)
+                agent = VirusModelAgent((x, y), self, agent_compartment, risk_group, person_id)
                 self.grid.place_agent(agent, (x, y))
                 self.schedule.add(agent)
+                person_id += 1
+
 
         # uses DataCollector built in module to collect data from each model run
         self.s_datacollector = DataCollector(
