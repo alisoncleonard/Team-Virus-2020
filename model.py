@@ -172,7 +172,7 @@ class Virus(Model):
     '''
     Model class for the Virus model.
     '''
-    def __init__(self, height=20, width=20, density = 0.3, num_agents=100, infectious_seed_pc=INFECTIOUS_PREVALENCE, high_risk_pc=FRACTION_HI_RISK)):
+    def __init__(self, height=20, width=20, density = 0.3, num_agents=100, infectious_seed_pc=INFECTIOUS_PREVALENCE, high_risk_pc=FRACTION_HI_RISK):
         # model is seeded with default parameters for density and infectious seed percent
         # can also change defaults with user settable parameter slider in GUI
         '''
