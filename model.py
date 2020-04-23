@@ -172,17 +172,19 @@ class Virus(Model):
     '''
     Model class for the Virus model.
     '''
-    def __init__(self, height=20, width=20, density = 0.3, num_agents=100, infectious_seed_pc=INFECTIOUS_PREVALENCE, high_risk_pc=FRACTION_HI_RISK):
+    def __init__(self, height=20, width=20, density = 0.3, num_agents=100,
+                infectious_seed_pc=INFECTIOUS_PREVALENCE,
+                recovered_seed_pc=0.2,
+                high_risk_pc=FRACTION_HI_RISK):
         # model is seeded with default parameters for density and infectious seed percent
         # can also change defaults with user settable parameter slider in GUI
-        '''
-        '''
 
         self.height = height # height and width of grid
         self.width = width
         self.density = density
         self.num_agents = num_agents # number of agents to initializse
         self.infectious_seed_pc = infectious_seed_pc # percent of infectious agents at start of simulation
+        self.recovered_seed_pc = recovered_seed_pc # percent of recovered agents at start of simulation
         self.high_risk_pc = high_risk_pc # percent of agents catergorized as high risk for severe disease
 
         self.schedule = RandomActivation(self) # controls the order that agents are activated and step
@@ -194,7 +196,6 @@ class Virus(Model):
         self.susceptible_count = 0
         self.exposed_count = 0
         self.recovered_count = 0
-        self.agent_count = 0
 
         # Set up agents
 
@@ -224,7 +225,6 @@ class Virus(Model):
             house_id+=1
 
             for person in range(cell):
-                self.agent_count += 1
 
                 if self.random.random() < self.high_risk_pc:
                     risk_group = "high"
@@ -238,6 +238,11 @@ class Virus(Model):
                     agent_compartment = random.choices(["infectious_asymptomatic", "infectious_symptomatic"],
                                                         [(1.0 - FRACTION_SYMPTOMATIC), FRACTION_SYMPTOMATIC])[0]
                     self.infectious_count += 1
+
+                elif self.random.random() < self.recovered_seed_pc:
+                    agent_compartment = "recovered"
+                    self.recovered_count += 1
+
                 else:
                     agent_compartment = "susceptible"
                     self.susceptible_count += 1
@@ -281,8 +286,6 @@ class Virus(Model):
         self.dead_count = 0
         self.susceptible_count = 0
         self.exposed_count = 0
-        self.exposed_count = 0
-        self.agent_count = self.schedule.get_agent_count()
         self.schedule.step()
         # collect data
         self.s_datacollector.collect(self)

@@ -69,7 +69,7 @@ class AgentCountElement(TextElement):
         pass
 
     def render(self, model):
-        return "Total agents: " + str(model.agent_count)
+        return "Total agents: " + str(model.num_agents)
 
 def virus_draw(agent):
     '''
@@ -103,7 +103,7 @@ def virus_draw(agent):
         portrayal["Layer"] = 0
         portrayal["w"] = 1
         portrayal["h"] = 1
-        
+
     return portrayal
 
 susceptible_element = SusceptibleElement()
@@ -122,9 +122,9 @@ model_params = {
     "height": 20,
     "width": 20,
     #"density": UserSettableParameter("slider", "Agent density", 0.3, 0.1, 1.0, 0.1)
-    "num_agents": UserSettableParameter("slider", "Number of Agents", 25, 1, 100, 5),
-    # 0.3 = hardcoded starting density, options from 0.1 to 1.0 with steps of 0.1
-    "infectious_seed_pc": UserSettableParameter("slider", "Initial fraction infectious", 0.01, 0.00, 1.0, 0.01),
+    "num_agents": UserSettableParameter("slider", "Number of Agents", 100, 1, 1000, 5),
+    "infectious_seed_pc": UserSettableParameter("slider", "Initial fraction infectious", 0.1, 0.00, 1.0, 0.01),
+    "recovered_seed_pc": UserSettableParameter("slider", "Initial fraction recovered", 0.1, 0.00, 1.0, 0.01),
     "high_risk_pc": UserSettableParameter("slider", "Percentage high-risk agents", 0.25, 0.00, 1.0, 0.05)
 }
 
