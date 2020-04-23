@@ -3,6 +3,7 @@ from mesa.visualization.modules import CanvasGrid, ChartModule, TextElement
 from mesa.visualization.UserParam import UserSettableParameter
 
 from model import Virus, VirusModelAgent, HouseAgent
+import model as md # to get global variables
 
 
 class SusceptibleElement(TextElement):
@@ -118,12 +119,14 @@ e_chart = ChartModule([{"Label": "exposed", "Color": "#FDC1C5"}], data_collector
 i_chart = ChartModule([{"Label": "infectious", "Color": "#FD5956"}], data_collector_name='i_datacollector')
 r_chart = ChartModule([{"Label": "recovered", "Color": "#730039"}], data_collector_name='r_datacollector')
 
+ip = md.INFECTIOUS_PREVALENCE
+
 model_params = {
     "height": 20,
     "width": 20,
     #"density": UserSettableParameter("slider", "Agent density", 0.3, 0.1, 1.0, 0.1)
     "num_agents": UserSettableParameter("slider", "Number of Agents", 100, 1, 1000, 5),
-    "infectious_seed_pc": UserSettableParameter("slider", "Initial fraction infectious", 0.1, 0.00, 1.0, 0.01),
+    "infectious_seed_pc": UserSettableParameter("slider", "Initial fraction infectious", ip, 0.00, 1.0, 0.01),
     "recovered_seed_pc": UserSettableParameter("slider", "Initial fraction recovered", 0.1, 0.00, 1.0, 0.01),
     "high_risk_pc": UserSettableParameter("slider", "Percentage high-risk agents", 0.25, 0.00, 1.0, 0.05)
 }
