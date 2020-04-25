@@ -175,7 +175,8 @@ class Virus(Model):
     def __init__(self, height=20, width=20, density = 0.3, num_agents=100,
                 infectious_seed_pc=INFECTIOUS_PREVALENCE,
                 recovered_seed_pc=0.2,
-                high_risk_pc=FRACTION_HI_RISK):
+                high_risk_pc=FRACTION_HI_RISK,
+                house_init="Random"):
         # model is seeded with default parameters for density and infectious seed percent
         # can also change defaults with user settable parameter slider in GUI
 
@@ -216,6 +217,11 @@ class Virus(Model):
         person_id = 0
         house_id = 2000
 
+        # Initializing different household styles
+        # Random = households randomly placed throughout grid
+        # Neighborhood = households laid out in uniform pattern on grid
+        # Rural = households widely spread out
+        # Clusters = households grouped in two clusters with larger space in between
         for cell in agents_per_cell:
             x = self.random.randrange(self.grid.width)
             y = self.random.randrange(self.grid.height)
