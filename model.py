@@ -168,20 +168,24 @@ class HouseAgent(Agent):
         self.pos = pos
         self.compartment = "house"
 
+init_height = 20
+init_width = 20
+
 class Virus(Model):
     '''
     Model class for the Virus model.
     '''
-    def __init__(self, height=20, width=20, density = 0.3, num_agents=100,
-                infectious_seed_pc=INFECTIOUS_PREVALENCE,
-                recovered_seed_pc=0.2,
-                high_risk_pc=FRACTION_HI_RISK):
-        # model is seeded with default parameters for density and infectious seed percent
+    def __init__(self, height=init_height, width=init_width,
+                num_agents=100, infectious_seed_pc=INFECTIOUS_PREVALENCE,
+                recovered_seed_pc=0.2, high_risk_pc=FRACTION_HI_RISK
+                #density=0.3
+                ):
+        # model is seeded with default parameters for infectious seed and high-risk percent
         # can also change defaults with user settable parameter slider in GUI
 
         self.height = height # height and width of grid
         self.width = width
-        self.density = density
+        #self.density = density
         self.num_agents = num_agents # number of agents to initializse
         self.infectious_seed_pc = infectious_seed_pc # percent of infectious agents at start of simulation
         self.recovered_seed_pc = recovered_seed_pc # percent of recovered agents at start of simulation
