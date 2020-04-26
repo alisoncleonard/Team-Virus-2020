@@ -82,6 +82,12 @@ def virus_draw(agent):
     portrayal = {"Shape": "circle", "r": 0.5, "Filled": "true", "Layer": 1}
 
     if type(agent) is VirusModelAgent:
+
+        if agent.risk_group == "high":
+            portrayal["Shape"] = "rect"
+            portrayal["w"] = 0.5
+            portrayal["h"] = 0.5
+
         if agent.compartment == "infectious":
             portrayal["Color"] = ["#FD5956"] # jerking grapefruit
             portrayal["stroke_color"] = "#000000"
