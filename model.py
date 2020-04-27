@@ -233,14 +233,13 @@ class Virus(Model):
             else: #house_init == "Clusters"
                 # Households will be created on first 9th and last 9th
                 # of grid (torus wrap turned off)
-                self.grid = MultiGrid(width, height, torus=False)
-                one_third_width = int(self.grid.width / 3)
-                x_low = self.random.randrange(one_third_width)
-                x_high = self.random.randrange(2 * one_third_width, self.grid.width)
+                one_sixth_width = int(self.grid.width / 6)
+                x_low = self.random.randrange(one_sixth_width, 2*one_sixth_width)
+                x_high = self.random.randrange(4*one_sixth_width, 5*one_sixth_width)
                 x = random.choice([x_low, x_high])
-                one_third_height = int(self.grid.height / 3)
-                y_low = self.random.randrange(one_third_height)
-                y_high = self.random.randrange(2 * one_third_height, self.grid.height)
+                one_sixth_height = int(self.grid.height / 6)
+                y_low = self.random.randrange(one_sixth_height, 2*one_sixth_height)
+                y_high = self.random.randrange(4*one_sixth_height, 5*one_sixth_height)
                 y = random.choice([y_low, y_high])
 
             house = HouseAgent((x,y), self, house_id)
