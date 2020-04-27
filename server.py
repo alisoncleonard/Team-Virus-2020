@@ -113,8 +113,8 @@ def virus_draw(agent):
 
     return portrayal
 
-grid_height = md.init_height
-grid_width = md.init_height
+grid_height = md.GRID_HEIGHT
+grid_width = md.GRID_WIDTH
 canvas_height = grid_height * 25
 canvas_width = grid_width * 25
 ip = md.INFECTIOUS_PREVALENCE
@@ -126,10 +126,10 @@ recovered_element = RecoveredElement()
 dead_element = DeadElement()
 agent_count_element = AgentCountElement()
 canvas_element = CanvasGrid(virus_draw, grid_height, grid_width, canvas_height, canvas_width)
-chart = ChartModule([{"Label": "susceptible", "Color": "#107AB0"},
-                     {"Label": "exposed", "Color": "#FDC1C5"},
-                     {"Label": "infectious", "Color": "#FD5956"},
-                     {"Label": "recovered", "Color": "#730039"}],
+chart = ChartModule([{"Label": "Susceptible", "Color": "#107AB0"},
+                     {"Label": "Exposed", "Color": "#FDC1C5"},
+                     {"Label": "Infectious", "Color": "#FD5956"},
+                     {"Label": "Recovered", "Color": "#730039"}],
                      data_collector_name='datacollector')
 
 model_params = {
