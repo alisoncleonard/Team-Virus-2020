@@ -8,7 +8,8 @@ import scipy.stats
 import numpy as np
 import random
 from mesa.batchrunner import BatchRunner
-import matplotlib.pyplot as plt
+import itertools
+import pandas as pd
 
 # Assumptions of model, from Joshua Weitz
 EXPOSED_PERIOD = 4 #days
@@ -25,6 +26,17 @@ HI_RISK_SYMP_TRANSMISSION = 0.7 #agent is high-risk, infectious neighbor is symp
 # Other assumptions of model, based on CO state stats
 HI_RISK_DEATH_RATE = 0.15
 LOW_RISK_DEATH_RATE = 0.01
+
+GRID_HEIGHT = 20
+GRID_WIDTH = 20
+
+def track_params(model):
+    return (model.infectious_seed_pc,
+            model.recovered_seed_pc,
+            model.high_risk_pc)
+
+def track_run(model):
+    return model.uid
 
 
 class VirusModelAgent(Agent):
@@ -170,20 +182,23 @@ class HouseAgent(Agent):
         self.pos = pos
         self.compartment = "house"
 
-init_height = 20
-init_width = 20
 
 class Virus(Model):
     '''
     Model class for the Virus model.
     '''
-    def __init__(self, height=init_height, width=init_width,
+
+    # id generator to track run numner in batch run data
+    id_gen = itertools.count(1)
+
+    def __init__(self, height=GRID_HEIGHT, width=GRID_WIDTH,
                 num_agents=100, infectious_seed_pc=INFECTIOUS_PREVALENCE,
                 recovered_seed_pc=0.2, high_risk_pc=FRACTION_HI_RISK
                 ):
         # model is seeded with default parameters for infectious seed and high-risk percent
         # can also change defaults with user settable parameter slider in GUI
 
+        self.uid = next(self.id_gen)
         self.height = height # height and width of grid
         self.width = width
         self.num_agents = num_agents # number of agents to initializse
@@ -200,6 +215,7 @@ class Virus(Model):
         self.susceptible_count = 0
         self.exposed_count = 0
         self.recovered_count = 0
+        self.step_count = 0
 
         # Set up agents
 
@@ -256,12 +272,15 @@ class Virus(Model):
                 self.schedule.add(agent)
                 person_id += 1
 
-        self.datacollector = DataCollector(
-            model_reporters={"susceptible": "susceptible_count",
-                             "exposed": "exposed_count",
-                             "infectious": "infectious_count",
-                             "recovered": "recovered_count",
-                             "dead": "dead_count"})
+        self.datacollector = DataCollector(model_reporters={
+                             "Step": "step_count",
+                             "Susceptible": "susceptible_count",
+                             "Exposed": "exposed_count",
+                             "Infectious": "infectious_count",
+                             "Recovered": "recovered_count",
+                             "Dead": "dead_count",
+                             "Model Params": track_params,
+                             "Run": track_run})
         self.datacollector.collect(self)
 
         self.running = True
@@ -277,9 +296,34 @@ class Virus(Model):
         self.susceptible_count = 0
         self.exposed_count = 0
         self.schedule.step()
+        self.step_count += 1
         # collect data
         self.datacollector.collect(self)
 
         # run until no more agents are infectious
         # if self.infectious_count == 0 and self.exposed_count ==0:
         #     self.running = False
+
+
+# code for batch runs
+
+# parameter lists for each parameter to be tested in batch run
+br_params = {"infectious_seed_pc": [0.01, 0.05, 0.1],
+             "recovered_seed_pc": [0.05, 0.1, 0.15, 0.2],
+             "high_risk_pc": [0.1, 0.2]}
+
+br = BatchRunner(Virus,
+                 br_params,
+                 iterations=1,
+                 max_steps=50,
+                 model_reporters={"Data Collector": lambda m: m.datacollector})
+
+if __name__ == '__main__':
+    br.run_all()
+    br_df = br.get_model_vars_dataframe()
+    br_step_data = pd.DataFrame()
+    for i in range(len(br_df["Data Collector"])):
+        if isinstance(br_df["Data Collector"][i], DataCollector):
+            i_run_data = br_df["Data Collector"][i].get_model_vars_dataframe()
+            br_step_data = br_step_data.append(i_run_data, ignore_index=True)
+    br_step_data.to_csv("VirusModel_Step_Data.csv")
