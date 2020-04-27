@@ -234,11 +234,11 @@ class Virus(Model):
                 # Households will be created on first 9th and last 9th
                 # of grid (torus wrap turned off)
                 self.grid = MultiGrid(width, height, torus=False)
-                one_third_width = self.grid.width / 3.0
+                one_third_width = self.grid.width / 3
                 x_low = self.random.randrange(one_third_width)
-                x_high = self.random.randrange(2 * one_third_width, self.grid.width)
+                x_high = self.random.randrange(2 * one_third_width, self.grid.width) 
                 x = random.choice(x_low, x_high)
-                one_third_height = self.grid.height / 3.0
+                one_third_height = self.grid.height / 3
                 y_low = self.random.randrange(one_third_height)
                 y_high = self.random.randrange(2 * one_third_height, self.grid.height)
                 y = random.choice(y_low, y_high)
