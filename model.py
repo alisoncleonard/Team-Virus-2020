@@ -308,14 +308,15 @@ class Virus(Model):
 # code for batch runs
 
 # parameter lists for each parameter to be tested in batch run
+# BatchRunner runs every combination of parameters listed in br_params
 br_params = {"infectious_seed_pc": [0.01, 0.05, 0.1],
              "recovered_seed_pc": [0.05, 0.1, 0.15, 0.2],
              "high_risk_pc": [0.1, 0.2]}
 
 br = BatchRunner(Virus,
                  br_params,
-                 iterations=1,
-                 max_steps=50,
+                 iterations=1, # number of times to run each parameter combination
+                 max_steps=50, # number of steps for each model run, unless conditions are met 
                  model_reporters={"Data Collector": lambda m: m.datacollector})
 
 if __name__ == '__main__':
