@@ -178,14 +178,12 @@ class Virus(Model):
     def __init__(self, height=init_height, width=init_width,
                 num_agents=100, infectious_seed_pc=INFECTIOUS_PREVALENCE,
                 recovered_seed_pc=0.2, high_risk_pc=FRACTION_HI_RISK
-                #density=0.3
                 ):
         # model is seeded with default parameters for infectious seed and high-risk percent
         # can also change defaults with user settable parameter slider in GUI
 
         self.height = height # height and width of grid
         self.width = width
-        #self.density = density
         self.num_agents = num_agents # number of agents to initializse
         self.infectious_seed_pc = infectious_seed_pc # percent of infectious agents at start of simulation
         self.recovered_seed_pc = recovered_seed_pc # percent of recovered agents at start of simulation
@@ -256,27 +254,12 @@ class Virus(Model):
                 self.schedule.add(agent)
                 person_id += 1
 
-
-        # uses DataCollector built in module to collect data from each model run
-        self.s_datacollector = DataCollector(
-                {"susceptible": "susceptible_count"},
-                {"x": lambda m: m.pos[0], "y": lambda m: m.pos[1]})
-        self.s_datacollector.collect(self)
-
-        self.e_datacollector = DataCollector(
-                {"exposed": "exposed_count"},
-                {"x": lambda m: m.pos[0], "y": lambda m: m.pos[1]})
-        self.e_datacollector.collect(self)
-
-        self.i_datacollector = DataCollector(
-                {"infectious": "infectious_count"},
-                {"x": lambda m: m.pos[0], "y": lambda m: m.pos[1]})
-        self.i_datacollector.collect(self)
-
-        self.r_datacollector = DataCollector(
-                {"recovered": "recovered_count"},
-                {"x": lambda m: m.pos[0], "y": lambda m: m.pos[1]})
-        self.r_datacollector.collect(self)
+        self.datacollector = DataCollector(
+            model_reporters={"susceptible": "susceptible_count",
+                             "exposed": "exposed_count",
+                             "infectious": "infectious_count",
+                             "recovered": "recovered_count"})
+        self.datacollector.collect(self)
 
         self.running = True
 
@@ -292,10 +275,7 @@ class Virus(Model):
         self.exposed_count = 0
         self.schedule.step()
         # collect data
-        self.s_datacollector.collect(self)
-        self.e_datacollector.collect(self)
-        self.i_datacollector.collect(self)
-        self.r_datacollector.collect(self)
+        self.datacollector.collect(self)
 
         # run until no more agents are infectious
         if self.infectious_count == 0 and self.exposed_count ==0:

@@ -126,10 +126,11 @@ recovered_element = RecoveredElement()
 dead_element = DeadElement()
 agent_count_element = AgentCountElement()
 canvas_element = CanvasGrid(virus_draw, grid_height, grid_width, canvas_height, canvas_width)
-s_chart = ChartModule([{"Label": "susceptible", "Color": "#107AB0"}], data_collector_name='s_datacollector')
-e_chart = ChartModule([{"Label": "exposed", "Color": "#FDC1C5"}], data_collector_name='e_datacollector')
-i_chart = ChartModule([{"Label": "infectious", "Color": "#FD5956"}], data_collector_name='i_datacollector')
-r_chart = ChartModule([{"Label": "recovered", "Color": "#730039"}], data_collector_name='r_datacollector')
+chart = ChartModule([{"Label": "susceptible", "Color": "#107AB0"},
+                     {"Label": "exposed", "Color": "#FDC1C5"},
+                     {"Label": "infectious", "Color": "#FD5956"},
+                     {"Label": "recovered", "Color": "#730039"}],
+                     data_collector_name='datacollector')
 
 model_params = {
     "height": UserSettableParameter("slider", "Grid Height", grid_height, 5, 50, 5),
@@ -138,12 +139,11 @@ model_params = {
     "infectious_seed_pc": UserSettableParameter("slider", "Initial fraction infectious", ip, 0.00, 1.0, 0.01),
     "recovered_seed_pc": UserSettableParameter("slider", "Initial fraction recovered", 0.1, 0.00, 1.0, 0.01),
     "high_risk_pc": UserSettableParameter("slider", "Percentage high-risk agents", 0.25, 0.00, 1.0, 0.05)
-    #"density": UserSettableParameter("slider", "Agent density", 0.3, 0.1, 1.0, 0.1)
 }
 
 server = ModularServer(Virus,
                        [canvas_element, agent_count_element,
                        susceptible_element, exposed_element,
                        infectious_element, recovered_element, dead_element,
-                       s_chart, e_chart, i_chart, r_chart],
+                       chart],
                        "Team Virus: COVID-19", model_params)
