@@ -7,6 +7,8 @@ from mesa.space import MultiGrid
 import scipy.stats
 import numpy as np
 import random
+from mesa.batchrunner import BatchRunner
+import matplotlib.pyplot as plt
 
 # Assumptions of model, from Joshua Weitz
 EXPOSED_PERIOD = 4 #days
@@ -258,7 +260,8 @@ class Virus(Model):
             model_reporters={"susceptible": "susceptible_count",
                              "exposed": "exposed_count",
                              "infectious": "infectious_count",
-                             "recovered": "recovered_count"})
+                             "recovered": "recovered_count",
+                             "dead": "dead_count"})
         self.datacollector.collect(self)
 
         self.running = True
@@ -278,5 +281,5 @@ class Virus(Model):
         self.datacollector.collect(self)
 
         # run until no more agents are infectious
-        if self.infectious_count == 0 and self.exposed_count ==0:
-            self.running = False
+        # if self.infectious_count == 0 and self.exposed_count ==0:
+        #     self.running = False
