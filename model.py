@@ -237,11 +237,11 @@ class Virus(Model):
                 one_third_width = int(self.grid.width / 3)
                 x_low = self.random.randrange(one_third_width)
                 x_high = self.random.randrange(2 * one_third_width, self.grid.width)
-                x = random.choice(x_low, x_high)
+                x = random.choice([x_low, x_high])
                 one_third_height = int(self.grid.height / 3)
                 y_low = self.random.randrange(one_third_height)
                 y_high = self.random.randrange(2 * one_third_height, self.grid.height)
-                y = random.choice(y_low, y_high)
+                y = random.choice([y_low, y_high])
 
             house = HouseAgent((x,y), self, house_id)
             self.grid.place_agent(house, (x, y))
