@@ -223,8 +223,26 @@ class Virus(Model):
         # Rural = households widely spread out
         # Clusters = households grouped in two clusters with larger space in between
         for cell in agents_per_cell:
-            x = self.random.randrange(self.grid.width)
-            y = self.random.randrange(self.grid.height)
+            if house_init == "Random":
+                x = self.random.randrange(self.grid.width)
+                y = self.random.randrange(self.grid.height)
+            #elif house_init == "Neighborhood":
+
+            #elif house_init == "Rural":
+
+            else: #house_init == "Clusters"
+                # Households will be created on first 9th and last 9th
+                # of grid (torus wrap turned off)
+                self.grid = MultiGrid(width, height, torus=False)
+                one_third_width = self.grid.width / 3.0
+                x_low = self.random.randrange(one_third_width)
+                x_high = self.random.randrange(2 * one_third_width, self.grid.width)
+                x = random.choice(x_low, x_high)
+                one_third_height = self.grid.height / 3.0
+                y_low = self.random.randrange(one_third_height)
+                y_high = self.random.randrange(2 * one_third_height, self.grid.height)
+                y = random.choice(y_low, y_high)
+
             house = HouseAgent((x,y), self, house_id)
             self.grid.place_agent(house, (x, y))
             self.schedule.add(house)

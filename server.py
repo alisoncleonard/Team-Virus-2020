@@ -129,8 +129,10 @@ model_params = {
     "infectious_seed_pc": UserSettableParameter("slider", "Initial fraction infectious", ip, 0.00, 1.0, 0.01),
     "recovered_seed_pc": UserSettableParameter("slider", "Initial fraction recovered", 0.1, 0.00, 1.0, 0.01),
     "high_risk_pc": UserSettableParameter("slider", "Percentage high-risk agents", 0.25, 0.00, 1.0, 0.05),
+    # "house_init": UserSettableParameter("choice", "Household Style", value="Random",
+    #                                     choices=["Random", "Neighborhood", "Rural", "Clusters"]),
     "house_init": UserSettableParameter("choice", "Household Style", value="Random",
-                                        choices=["Random", "Neighborhood", "Rural", "Clusters"])
+                                        choices=["Random", "Clusters"])
 }
 
 server = ModularServer(Virus,
