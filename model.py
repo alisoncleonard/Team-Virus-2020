@@ -193,7 +193,8 @@ class Virus(Model):
 
     def __init__(self, height=GRID_HEIGHT, width=GRID_WIDTH,
                 num_agents=100, infectious_seed_pc=INFECTIOUS_PREVALENCE,
-                recovered_seed_pc=0.2, high_risk_pc=FRACTION_HI_RISK
+                recovered_seed_pc=0.2, high_risk_pc=FRACTION_HI_RISK,
+                house_init="Random")
                 ):
         # model is seeded with default parameters for infectious seed and high-risk percent
         # can also change defaults with user settable parameter slider in GUI
@@ -236,9 +237,31 @@ class Virus(Model):
         person_id = 0
         house_id = 2000
 
+        # Initializing different household styles
+        # Random = households randomly placed throughout grid
+        # Neighborhood = households laid out in uniform pattern on grid
+        # Rural = households widely spread out
+        # Clusters = households grouped in two clusters with larger space in between
         for cell in agents_per_cell:
-            x = self.random.randrange(self.grid.width)
-            y = self.random.randrange(self.grid.height)
+            if house_init == "Random":
+                x = self.random.randrange(self.grid.width)
+                y = self.random.randrange(self.grid.height)
+            #elif house_init == "Neighborhood":
+
+            #elif house_init == "Rural":
+
+            else: #house_init == "Clusters"
+                # Households will be created on first 9th and last 9th
+                # of grid (torus wrap turned off)
+                one_sixth_width = int(self.grid.width / 6)
+                x_low = self.random.randrange(one_sixth_width, 2*one_sixth_width)
+                x_high = self.random.randrange(4*one_sixth_width, 5*one_sixth_width)
+                x = random.choice([x_low, x_high])
+                one_sixth_height = int(self.grid.height / 6)
+                y_low = self.random.randrange(one_sixth_height, 2*one_sixth_height)
+                y_high = self.random.randrange(4*one_sixth_height, 5*one_sixth_height)
+                y = random.choice([y_low, y_high])
+
             house = HouseAgent((x,y), self, house_id)
             self.grid.place_agent(house, (x, y))
             self.schedule.add(house)
