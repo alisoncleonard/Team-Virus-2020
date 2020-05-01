@@ -137,7 +137,7 @@ model_params = {
                                         choices=["Random", "Clusters"])
 }
 
-canvas_element = CanvasGrid(virus_draw, model_params["height"], model_params["width"], 500, 500)
+canvas_element = CanvasGrid(virus_draw, model_params["height"].value, model_params["width"].value, 25*model_params["height"].value, 25*model_params["width"].value)
 
 server = ModularServer(Virus,
                        [canvas_element, agent_count_element,
