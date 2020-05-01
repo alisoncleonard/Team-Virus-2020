@@ -113,7 +113,7 @@ infectious_element = InfectiousElement()
 recovered_element = RecoveredElement()
 dead_element = DeadElement()
 agent_count_element = AgentCountElement()
-canvas_element = CanvasGrid(virus_draw, 20, 20, 500, 500)
+#canvas_element = CanvasGrid(virus_draw, 20, 20, 500, 500)
 s_chart = ChartModule([{"Label": "susceptible", "Color": "#107AB0"}], data_collector_name='s_datacollector')
 e_chart = ChartModule([{"Label": "exposed", "Color": "#FDC1C5"}], data_collector_name='e_datacollector')
 i_chart = ChartModule([{"Label": "infectious", "Color": "#FD5956"}], data_collector_name='i_datacollector')
@@ -122,8 +122,10 @@ r_chart = ChartModule([{"Label": "recovered", "Color": "#730039"}], data_collect
 ip = md.INFECTIOUS_PREVALENCE
 
 model_params = {
-    "height": 20,
-    "width": 20,
+    "height": UserSettableParameter("slider", "Height of Grid", 20, 10, 100, 5),
+    "width": UserSettableParameter("slider", "Width of Grid", 20, 10, 100, 5),
+    #"height": 20,
+    #"width": 20,
     #"density": UserSettableParameter("slider", "Agent density", 0.3, 0.1, 1.0, 0.1)
     "num_agents": UserSettableParameter("slider", "Number of Agents", 100, 1, 1000, 5),
     "infectious_seed_pc": UserSettableParameter("slider", "Initial fraction infectious", ip, 0.00, 1.0, 0.01),
@@ -134,6 +136,8 @@ model_params = {
     "house_init": UserSettableParameter("choice", "Household Style", value="Random",
                                         choices=["Random", "Clusters"])
 }
+
+canvas_element = CanvasGrid(virus_draw, model_params["height"], model_params["width"], 500, 500)
 
 server = ModularServer(Virus,
                        [canvas_element, agent_count_element,
