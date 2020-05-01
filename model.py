@@ -194,8 +194,7 @@ class Virus(Model):
     def __init__(self, height=GRID_HEIGHT, width=GRID_WIDTH,
                 num_agents=100, infectious_seed_pc=INFECTIOUS_PREVALENCE,
                 recovered_seed_pc=0.2, high_risk_pc=FRACTION_HI_RISK,
-                house_init="Random")
-                ):
+                house_init="Random"):
         # model is seeded with default parameters for infectious seed and high-risk percent
         # can also change defaults with user settable parameter slider in GUI
 
@@ -339,7 +338,7 @@ br_params = {"infectious_seed_pc": [0.01, 0.05, 0.1],
 br = BatchRunner(Virus,
                  br_params,
                  iterations=1, # number of times to run each parameter combination
-                 max_steps=50, # number of steps for each model run, unless conditions are met 
+                 max_steps=50, # number of steps for each model run, unless conditions are met
                  model_reporters={"Data Collector": lambda m: m.datacollector})
 
 if __name__ == '__main__':
