@@ -345,10 +345,6 @@ class Virus(Model):
         high_risk_houses = []
         low_risk_houses = []
 
-        for cell in agents_per_cell:
-            x = self.random.randrange(self.grid.width)
-            y = self.random.randrange(self.grid.height)
-
         # For uniform neighborhood, approximate with square packing of circles
         # in a rectangle
         # Getting indices of where houses should be
@@ -393,11 +389,6 @@ class Virus(Model):
                 y_low = self.random.randrange(one_sixth_height, 2*one_sixth_height)
                 y_high = self.random.randrange(4*one_sixth_height, 5*one_sixth_height)
                 y = random.choice([y_low, y_high])
-
-            house = HouseAgent((x,y), self, house_id)
-            self.grid.place_agent(house, (x, y))
-            self.schedule.add(house)
-            house_id+=1
 
             people_here = []
             high_risk_house = False
