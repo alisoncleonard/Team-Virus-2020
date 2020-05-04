@@ -47,9 +47,9 @@ def track_params(model):
     return (model.infectious_seed_pc,
             model.recovered_seed_pc,
             model.high_risk_pc,
+            model.grid_area,
             model.house_init,
-            model.release_strat,
-            model.grid_area)
+            model.release_strat)
 
 def track_run(model):
     return model.uid
