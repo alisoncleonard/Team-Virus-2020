@@ -248,6 +248,9 @@ class Virus(Model):
             circle_diameter = 2.0 * circle_radius
             floor_radius = math.floor(circle_radius)
             floor_diameter = math.floor(circle_diameter)
+            # Checking for feasibility:
+            if floor_diameter < 1:
+                raise ValueError("Too many agents to fit on grid.")
             # number of houses for each row of grid
             num_each_row = 1 + math.floor((self.grid.width - floor_radius) / floor_diameter)
             # number of houses for each column of grid
