@@ -146,13 +146,10 @@ model_params = {
     "infectious_seed_pc": UserSettableParameter("slider", "Initial fraction infectious", ip, 0.00, 1.0, 0.01),
     "recovered_seed_pc": UserSettableParameter("slider", "Initial fraction recovered", 0.1, 0.00, 1.0, 0.01),
     "high_risk_pc": UserSettableParameter("slider", "Percentage high-risk agents", 0.25, 0.00, 1.0, 0.05),
-<<<<<<< HEAD
     "release_strat": UserSettableParameter("choice", "Quarantine Release Strategy", value="Random individual houses",
-                                        choices=["Everyone release", "Random group of houses", "Random individual houses", "Low risk individuals", "Low risk houses"])
-=======
+                                        choices=["Everyone release", "Random group of houses", "Random individual houses", "Low risk individuals", "Low risk houses"]),
     "house_init": UserSettableParameter("choice", "Household Style", value="Random",
                                         choices=["Random", "Neighborhood", "Clusters"])
->>>>>>> 086b4a27b1ba8ebc86229a48b6f3d185d5b91859
 }
 
 canvas_element = CanvasGrid(virus_draw, grid_height, grid_width, 500, 500)

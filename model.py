@@ -27,7 +27,7 @@ HI_RISK_SYMP_TRANSMISSION = 0.7 #agent is high-risk, infectious neighbor is symp
 HI_RISK_DEATH_RATE = 0.15
 LOW_RISK_DEATH_RATE = 0.01
 
-<<<<<<< HEAD
+
 def checkKey(dict, key):
 
     if key in dict.keys():
@@ -36,7 +36,7 @@ def checkKey(dict, key):
         val = "Not present"
 
     return val
-=======
+
 GRID_HEIGHT = 20
 GRID_WIDTH = 20
 
@@ -48,7 +48,6 @@ def track_params(model):
 def track_run(model):
     return model.uid
 
->>>>>>> 086b4a27b1ba8ebc86229a48b6f3d185d5b91859
 
 class VirusModelAgent(Agent):
     '''
@@ -290,14 +289,6 @@ class Virus(Model):
     '''
     Model class for the Virus model.
     '''
-<<<<<<< HEAD
-    def __init__(self, height=20, width=20, density = 0.3, num_agents=100,
-                infectious_seed_pc=INFECTIOUS_PREVALENCE,
-                recovered_seed_pc=0.2,
-                high_risk_pc=FRACTION_HI_RISK,
-                release_strat= "Random individual houses"):
-        # model is seeded with default parameters for density and infectious seed percent
-=======
 
     # id generator to track run numner in batch run data
     id_gen = itertools.count(1)
@@ -305,9 +296,8 @@ class Virus(Model):
     def __init__(self, height=GRID_HEIGHT, width=GRID_WIDTH,
                 num_agents=100, infectious_seed_pc=INFECTIOUS_PREVALENCE,
                 recovered_seed_pc=0.2, high_risk_pc=FRACTION_HI_RISK,
-                house_init="Random"):
+                house_init="Random", release_strat= "Random individual houses"):
         # model is seeded with default parameters for infectious seed and high-risk percent
->>>>>>> 086b4a27b1ba8ebc86229a48b6f3d185d5b91859
         # can also change defaults with user settable parameter slider in GUI
 
         self.uid = next(self.id_gen)
@@ -352,14 +342,13 @@ class Virus(Model):
         person_id = 0
         house_id = 2000
 
-<<<<<<< HEAD
         high_risk_houses = []
         low_risk_houses = []
 
         for cell in agents_per_cell:
             x = self.random.randrange(self.grid.width)
             y = self.random.randrange(self.grid.height)
-=======
+
         # For uniform neighborhood, approximate with square packing of circles
         # in a rectangle
         # Getting indices of where houses should be
@@ -409,7 +398,6 @@ class Virus(Model):
             self.grid.place_agent(house, (x, y))
             self.schedule.add(house)
             house_id+=1
->>>>>>> 086b4a27b1ba8ebc86229a48b6f3d185d5b91859
 
             people_here = []
             high_risk_house = False
@@ -443,7 +431,6 @@ class Virus(Model):
                 people_here.append(person_id)
                 person_id += 1
 
-<<<<<<< HEAD
             if high_risk_house == False:
                 low_risk_houses.append(house_id)
             else:
@@ -477,7 +464,7 @@ class Virus(Model):
                 {"recovered": "recovered_count"},
                 {"x": lambda m: m.pos[0], "y": lambda m: m.pos[1]})
         self.r_datacollector.collect(self)
-=======
+
         self.datacollector = DataCollector(model_reporters={
                              "Step": "step_count",
                              "Susceptible": "susceptible_count",
@@ -488,7 +475,6 @@ class Virus(Model):
                              "Model Params": track_params,
                              "Run": track_run})
         self.datacollector.collect(self)
->>>>>>> 086b4a27b1ba8ebc86229a48b6f3d185d5b91859
 
         self.running = True
 
@@ -508,12 +494,10 @@ class Virus(Model):
         self.datacollector.collect(self)
 
         # run until no more agents are infectious
-<<<<<<< HEAD
-        if self.infectious_count == 0 and self.exposed_count == 0:
-            self.running = False
+        # if self.infectious_count == 0 and self.exposed_count == 0:
+        #     self.running = False
 
         self.tick += 1
-=======
         # if self.infectious_count == 0 and self.exposed_count ==0:
         #     self.running = False
 
@@ -541,4 +525,3 @@ if __name__ == '__main__':
             i_run_data = br_df["Data Collector"][i].get_model_vars_dataframe()
             br_step_data = br_step_data.append(i_run_data, ignore_index=True)
     br_step_data.to_csv("VirusModel_Step_Data.csv")
->>>>>>> 086b4a27b1ba8ebc86229a48b6f3d185d5b91859
