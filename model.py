@@ -254,7 +254,10 @@ class Virus(Model):
             num_each_col = 1 + math.floor((self.grid.height - floor_radius) / floor_diameter)
             for j in range(num_each_col):
                 for i in range(num_each_row):
-                    house_locations.append((floor_radius + i * floor_diameter, floor_radius + j * floor_diameter))
+                    xpos = floor_radius + i * floor_diameter
+                    ypos = floor_radius + j * floor_diameter
+                    if xpos < self.grid.width and ypos < self.grid.height:
+                        house_locations.append((xpos, ypos))
 
         # Initializing different household styles
         # Neighborhood = households laid out in uniform pattern on grid
