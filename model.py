@@ -24,6 +24,14 @@ HI_RISK_SYMP_TRANSMISSION = 0.7 #agent is high-risk, infectious neighbor is symp
 HI_RISK_DEATH_RATE = 0.15
 LOW_RISK_DEATH_RATE = 0.01
 
+def checkKey(dict, key):
+
+    if key in dict.keys():
+        val = "Present"
+    else:
+        val = "Not present"
+
+    return val
 
 class VirusModelAgent(Agent):
     '''
@@ -47,6 +55,7 @@ class VirusModelAgent(Agent):
         self.compartment = agent_compartment
         self.risk_group = risk_group
         self.infection_timeline = 0
+        self.at_home = True
 
     def move(self):
         possible_steps = self.model.grid.get_neighborhood(
@@ -61,7 +70,60 @@ class VirusModelAgent(Agent):
         if self.compartment == "susceptible":
             self.model.susceptible_count += 1
         if self.compartment != "dead":
-            self.move() # calls move method first before checking status of neighbors
+            # Release people from quarantine
+
+            if self.model.release_strat == "Random individual houses":
+                if checkKey(self.model.people_dict, (2000 + self.model.tick)) == "Present":
+                    people_to_release = self.model.people_dict[2000 + self.model.tick]
+                    for person in people_to_release:
+                        if self.unique_id == person:
+                            self.at_home = False
+            elif self.model.release_strat == "Random group of houses":
+                # Release random first half of houses at 1st tick
+                if self.model.tick == 0:
+                    counter = len(self.model.people_dict)//2
+                    for x in range(counter):
+                        people_to_release = self.model.people_dict[2000 + x]
+                        for person in people_to_release:
+                            if self.unique_id == person:
+                                self.at_home = False
+                elif self.model.tick == 14:
+                    counter = len(self.model.people_dict) - len(self.model.people_dict)//2
+                    for x in range(counter):
+                        x += len(self.model.people_dict)//2
+                        people_to_release = self.model.people_dict[2000 + x]
+                        for person in people_to_release:
+                            if self.unique_id == person:
+                                self.at_home = False
+            elif self.model.release_strat == "Low risk individuals":
+                if self.model.tick == 0:
+                    if self.risk_group == "low":
+                        self.at_home = False
+                elif self.model.tick == 14:
+                    if self.risk_group == "high":
+                        self.at_home = False
+            elif self.model.release_strat == "Low risk houses":
+                if self.model.tick == 0:
+                    houses_to_release = self.model.house_dict["low risk houses"]
+                    for house in houses_to_release:
+                        people_to_release = self.model.people_dict[house]
+                        for person in people_to_release:
+                            if self.unique_id == person:
+                                self.at_home = False
+                if self.model.tick == 14:
+                    houses_to_release = self.model.house_dict["high risk houses"]
+                    for house in houses_to_release:
+                        people_to_release = self.model.people_dict[house]
+                        for person in people_to_release:
+                            if self.unique_id == person:
+                                self.at_home = False
+            elif self.model.release_strat == "Everyone release":
+                if self.model.tick == 0:
+                    self.at_home = False
+
+            # only move people who are not in quarantine
+            if self.at_home == False:
+                self.move() # calls move method first before checking status of neighbors
 
             # Built-in get_neighbors function returns a list of neighbors.
             # Two types of cell neighborhoods: Moore (including diagonals), and
@@ -156,7 +218,7 @@ class HouseAgent(Agent):
     '''
     House cell in virus model. Each agent is an individual person.
     '''
-    def __init__(self, pos, model, unique_id):
+    def __init__(self, pos, model, unique_id, high_risk_house):
         '''
          Create a new HouseAgent agent.
          Args:
@@ -167,6 +229,44 @@ class HouseAgent(Agent):
         super().__init__(unique_id, model) # calling the agent class ___init___, inputs (unique_id, model)
         self.pos = pos
         self.compartment = "house"
+        self.people_home = True
+        self.high_risk = high_risk_house # boolean
+
+    def step(self):
+        if self.model.release_strat == "Random individual houses":
+            if self.model.tick == (self.unique_id - 2000):
+                self.people_home = False
+        elif self.model.release_strat == "Random group of houses":
+            if self.model.tick == 0:
+                counter = len(self.model.people_dict)//2
+                for x in range(counter):
+                    temp_id = 2000 + x
+                    if self.unique_id == temp_id:
+                        self.people_home = False
+            elif self.model.tick == 14:
+                counter = len(self.model.people_dict) - len(self.model.people_dict)//2
+                for x in range(counter):
+                    x += len(self.model.people_dict)//2
+                    temp_id = 2000 + x
+                    if self.unique_id == temp_id:
+                        self.people_home = False
+        elif self.model.release_strat == "Low risk individuals":
+            if self.model.tick == 0:
+                if self.high_risk == False:
+                    self.people_home = False
+            if self.model.tick == 14:
+                self.people_home = False
+        elif self.model.release_strat == "Low risk houses":
+            houses_to_release = []
+            if self.model.tick == 0:
+                if self.high_risk == False:
+                    self.people_home = False
+            elif self.model.tick == 14:
+                if self.high_risk == True:
+                    self.people_home = False
+        elif self.model.release_strat == "Everyone release":
+            if self.model.tick == 0:
+                self.people_home = False
 
 class Virus(Model):
     '''
@@ -175,7 +275,8 @@ class Virus(Model):
     def __init__(self, height=20, width=20, density = 0.3, num_agents=100,
                 infectious_seed_pc=INFECTIOUS_PREVALENCE,
                 recovered_seed_pc=0.2,
-                high_risk_pc=FRACTION_HI_RISK):
+                high_risk_pc=FRACTION_HI_RISK,
+                release_strat= "Random individual houses"):
         # model is seeded with default parameters for density and infectious seed percent
         # can also change defaults with user settable parameter slider in GUI
 
@@ -197,8 +298,12 @@ class Virus(Model):
         self.exposed_count = 0
         self.recovered_count = 0
 
-        # Set up agents
+        self.tick = 0
+        self.people_dict = dict() # keys: house_ids, value: people_ids of people at that house
+        self.house_dict = dict() # keys: low/high risk houses, value: house_ids of corresponding houses
+        self.release_strat = release_strat
 
+        ### Set up agents and houses ###
         # First initialize vec defining number of agents per cell/house (between 1-4)
         agents_per_cell = []
         agents_sum = 0
@@ -212,22 +317,24 @@ class Virus(Model):
             agents_per_cell.append(random.randint(1,temp))
             agents_sum = sum(agents_per_cell)
 
-        # Now initialize these agents on the grid
+        # Now initialize these agents on the grid in houses
         person_id = 0
         house_id = 2000
+
+        high_risk_houses = []
+        low_risk_houses = []
 
         for cell in agents_per_cell:
             x = self.random.randrange(self.grid.width)
             y = self.random.randrange(self.grid.height)
-            house = HouseAgent((x,y), self, house_id)
-            self.grid.place_agent(house, (x, y))
-            self.schedule.add(house)
-            house_id+=1
 
+            people_here = []
+            high_risk_house = False
+            # Initialize people at house at (x,y)
             for person in range(cell):
-
                 if self.random.random() < self.high_risk_pc:
                     risk_group = "high"
+                    high_risk_house = True
                 else:
                     risk_group = "low"
 
@@ -250,8 +357,21 @@ class Virus(Model):
                 agent = VirusModelAgent((x, y), self, agent_compartment, risk_group, person_id)
                 self.grid.place_agent(agent, (x, y))
                 self.schedule.add(agent)
+                people_here.append(person_id)
                 person_id += 1
 
+            if high_risk_house == False:
+                low_risk_houses.append(house_id)
+            else:
+                high_risk_houses.append(house_id)
+            house = HouseAgent((x,y), self, house_id, high_risk_house)
+            self.grid.place_agent(house, (x, y))
+            self.schedule.add(house)
+            self.people_dict[house_id] = people_here
+            house_id+=1
+
+        self.house_dict["low risk houses"] = low_risk_houses
+        self.house_dict["high risk houses"] = high_risk_houses
 
         # uses DataCollector built in module to collect data from each model run
         self.s_datacollector = DataCollector(
@@ -294,5 +414,7 @@ class Virus(Model):
         self.r_datacollector.collect(self)
 
         # run until no more agents are infectious
-        if self.infectious_count == 0 and self.exposed_count ==0:
+        if self.infectious_count == 0 and self.exposed_count == 0:
             self.running = False
+
+        self.tick += 1

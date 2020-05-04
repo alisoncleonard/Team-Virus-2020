@@ -99,7 +99,13 @@ def virus_draw(agent):
             portrayal["stroke_color"] = "#000000"
 
     elif type(agent) is HouseAgent:
-        portrayal["Color"] = ["#666666"] # gray
+        if agent.people_home == True:
+            if agent.high_risk == False:
+                portrayal["Color"] = ["#D3D3D3"] # light gray = low risk house
+            else:
+                portrayal["Color"] = ["#666666"] # gray = high risk house
+        else:
+            portrayal["Color"] = ["#FFFFFF"] # white
         portrayal["Shape"] = "rect"
         portrayal["Layer"] = 0
         portrayal["w"] = 1
@@ -128,7 +134,9 @@ model_params = {
     "num_agents": UserSettableParameter("slider", "Number of Agents", 100, 1, 1000, 5),
     "infectious_seed_pc": UserSettableParameter("slider", "Initial fraction infectious", ip, 0.00, 1.0, 0.01),
     "recovered_seed_pc": UserSettableParameter("slider", "Initial fraction recovered", 0.1, 0.00, 1.0, 0.01),
-    "high_risk_pc": UserSettableParameter("slider", "Percentage high-risk agents", 0.25, 0.00, 1.0, 0.05)
+    "high_risk_pc": UserSettableParameter("slider", "Percentage high-risk agents", 0.25, 0.00, 1.0, 0.05),
+    "release_strat": UserSettableParameter("choice", "Quarantine Release Strategy", value="Random individual houses",
+                                        choices=["Everyone release", "Random group of houses", "Random individual houses", "Low risk individuals", "Low risk houses"])
 }
 
 server = ModularServer(Virus,
