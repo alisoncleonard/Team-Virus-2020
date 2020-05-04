@@ -6,7 +6,7 @@ from mesa.datacollection import DataCollector
 from mesa.space import MultiGrid
 import scipy.stats
 import numpy as np
-import random
+import math
 from mesa.batchrunner import BatchRunner
 import itertools
 import pandas as pd
@@ -236,19 +236,41 @@ class Virus(Model):
         person_id = 0
         house_id = 2000
 
+        # For uniform neighborhood, approximate with square packing of circles
+        # in a rectangle
+        # Getting indices of where houses should be
+        # Initialing array of tuples with random grid coordinates
+        num_houses = len(agents_per_cell)
+        house_locations = [(self.random.randrange(self.grid.width),
+                            self.random.randrange(self.grid.height))
+                            for h in range(num_houses)]
+        if house_init == "Neighborhood":
+            grid_area = self.grid.width * self.grid.height
+            circle_radius = math.sqrt(grid_area / (4.0 * num_houses))
+            circle_diameter = 2.0 * circle_radius
+            floor_radius = math.floor(circle_radius)
+            floor_diameter = math.floor(circle_diameter)
+            # number of houses for each row of grid
+            num_each_row = 1 + math.floor((self.grid.width - floor_radius) / floor_diameter)
+            # number of houses for each column of grid
+            num_each_col = 1 + math.floor((self.grid.height - floor_radius) / floor_diameter)
+            for j in range(num_each_col):
+                for i in range(num_each_row):
+                    house_locations[i+j] = (floor_radius + i * floor_diameter, floor_radius + j * floor_diameter)
+
         # Initializing different household styles
-        # Random = households randomly placed throughout grid
         # Neighborhood = households laid out in uniform pattern on grid
         # Rural = households widely spread out
         # Clusters = households grouped in two clusters with larger space in between
+        cell_counter = 0
         for cell in agents_per_cell:
             if house_init == "Random":
                 x = self.random.randrange(self.grid.width)
                 y = self.random.randrange(self.grid.height)
-            #elif house_init == "Neighborhood":
-
-            #elif house_init == "Rural":
-
+            elif house_init == "Neighborhood":
+                x = house_locations[cell_counter][0]
+                y = house_locations[cell_counter][1]
+                cell_counter += 1
             else: #house_init == "Clusters"
                 # Households will be created on first 9th and last 9th
                 # of grid (torus wrap turned off)
@@ -267,7 +289,6 @@ class Virus(Model):
             house_id+=1
 
             for person in range(cell):
-
                 if self.random.random() < self.high_risk_pc:
                     risk_group = "high"
                 else:
