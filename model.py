@@ -27,6 +27,12 @@ HI_RISK_SYMP_TRANSMISSION = 0.7 #agent is high-risk, infectious neighbor is symp
 HI_RISK_DEATH_RATE = 0.15
 LOW_RISK_DEATH_RATE = 0.01
 
+GRID_HEIGHT_DEMO = 20
+GRID_WIDTH_DEMO = 20
+GRID_HEIGHT_SMALL = 100
+GRID_WIDTH_SMALL = 100
+GRID_HEIGHT_LARGE = 250
+GRID_WIDTH_LARGE = 250
 
 def checkKey(dict, key):
 
@@ -293,23 +299,30 @@ class Virus(Model):
     # id generator to track run numner in batch run data
     id_gen = itertools.count(1)
 
-    def __init__(self, height=GRID_HEIGHT, width=GRID_WIDTH,
+    def __init__(self, grid_area="Demo",
                 num_agents=100, infectious_seed_pc=INFECTIOUS_PREVALENCE,
                 recovered_seed_pc=0.2, high_risk_pc=FRACTION_HI_RISK,
                 house_init="Random", release_strat= "Random individual houses"):
-        # model is seeded with default parameters for infectious seed and high-risk percent
+        # model is seeded with default parameters
         # can also change defaults with user settable parameter slider in GUI
 
         self.uid = next(self.id_gen)
-        self.height = height # height and width of grid
-        self.width = width
+        if grid_area == "Demo":
+            self.height = GRID_HEIGHT_DEMO # height and width of grid
+            self.width = GRID_WIDTH_DEMO
+        elif grid_area == "Small":
+            self.height = GRID_HEIGHT_SMALL
+            self.width = GRID_WIDTH_SMALL
+        elif grid_area == "Large":
+            self.height = GRID_HEIGHT_LARGE
+            self.width = GRID_WIDTH_LARGE
         self.num_agents = num_agents # number of agents to initializse
         self.infectious_seed_pc = infectious_seed_pc # percent of infectious agents at start of simulation
         self.recovered_seed_pc = recovered_seed_pc # percent of recovered agents at start of simulation
         self.high_risk_pc = high_risk_pc # percent of agents catergorized as high risk for severe disease
 
         self.schedule = RandomActivation(self) # controls the order that agents are activated and step
-        self.grid = MultiGrid(width, height, torus=True) # multiple agents per cell
+        self.grid = MultiGrid(self.width, self.height, torus=True) # multiple agents per cell
 
         self.infectious_count = 0
         self.infectious_percent = 0
@@ -340,7 +353,7 @@ class Virus(Model):
 
         # Now initialize these agents on the grid in houses
         person_id = 0
-        house_id = 2000
+        house_id = 2500
 
         high_risk_houses = []
         low_risk_houses = []
@@ -357,13 +370,19 @@ class Virus(Model):
             circle_diameter = 2.0 * circle_radius
             floor_radius = math.floor(circle_radius)
             floor_diameter = math.floor(circle_diameter)
+            # Checking for feasibility:
+            if floor_diameter < 1:
+                raise ValueError("Too many agents to fit on grid.")
             # number of houses for each row of grid
             num_each_row = 1 + math.floor((self.grid.width - floor_radius) / floor_diameter)
             # number of houses for each column of grid
             num_each_col = 1 + math.floor((self.grid.height - floor_radius) / floor_diameter)
             for j in range(num_each_col):
                 for i in range(num_each_row):
-                    house_locations.append((floor_radius + i * floor_diameter, floor_radius + j * floor_diameter))
+                    xpos = floor_radius + i * floor_diameter
+                    ypos = floor_radius + j * floor_diameter
+                    if xpos < self.grid.width and ypos < self.grid.height:
+                        house_locations.append((xpos, ypos))
 
         # Initializing different household styles
         # Neighborhood = households laid out in uniform pattern on grid
