@@ -241,9 +241,7 @@ class Virus(Model):
         # Getting indices of where houses should be
         # Initialing array of tuples with random grid coordinates
         num_houses = len(agents_per_cell)
-        house_locations = [(self.random.randrange(self.grid.width),
-                            self.random.randrange(self.grid.height))
-                            for h in range(num_houses)]
+        house_locations = []
         if house_init == "Neighborhood":
             grid_area = self.grid.width * self.grid.height
             circle_radius = math.sqrt(grid_area / (4.0 * num_houses))
@@ -256,7 +254,7 @@ class Virus(Model):
             num_each_col = 1 + math.floor((self.grid.height - floor_radius) / floor_diameter)
             for j in range(num_each_col):
                 for i in range(num_each_row):
-                    house_locations[i+j] = (floor_radius + i * floor_diameter, floor_radius + j * floor_diameter)
+                    house_locations.append((floor_radius + i * floor_diameter, floor_radius + j * floor_diameter))
 
         # Initializing different household styles
         # Neighborhood = households laid out in uniform pattern on grid
