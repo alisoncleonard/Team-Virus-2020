@@ -6,7 +6,10 @@ from mesa.datacollection import DataCollector
 from mesa.space import MultiGrid
 import scipy.stats
 import numpy as np
-import random
+import math
+from mesa.batchrunner import BatchRunner
+import itertools
+import pandas as pd
 
 # Assumptions of model, from Joshua Weitz
 EXPOSED_PERIOD = 4 #days
@@ -24,6 +27,7 @@ HI_RISK_SYMP_TRANSMISSION = 0.7 #agent is high-risk, infectious neighbor is symp
 HI_RISK_DEATH_RATE = 0.15
 LOW_RISK_DEATH_RATE = 0.01
 
+<<<<<<< HEAD
 def checkKey(dict, key):
 
     if key in dict.keys():
@@ -32,6 +36,19 @@ def checkKey(dict, key):
         val = "Not present"
 
     return val
+=======
+GRID_HEIGHT = 20
+GRID_WIDTH = 20
+
+def track_params(model):
+    return (model.infectious_seed_pc,
+            model.recovered_seed_pc,
+            model.high_risk_pc)
+
+def track_run(model):
+    return model.uid
+
+>>>>>>> 086b4a27b1ba8ebc86229a48b6f3d185d5b91859
 
 class VirusModelAgent(Agent):
     '''
@@ -268,21 +285,34 @@ class HouseAgent(Agent):
             if self.model.tick == 0:
                 self.people_home = False
 
+
 class Virus(Model):
     '''
     Model class for the Virus model.
     '''
+<<<<<<< HEAD
     def __init__(self, height=20, width=20, density = 0.3, num_agents=100,
                 infectious_seed_pc=INFECTIOUS_PREVALENCE,
                 recovered_seed_pc=0.2,
                 high_risk_pc=FRACTION_HI_RISK,
                 release_strat= "Random individual houses"):
         # model is seeded with default parameters for density and infectious seed percent
+=======
+
+    # id generator to track run numner in batch run data
+    id_gen = itertools.count(1)
+
+    def __init__(self, height=GRID_HEIGHT, width=GRID_WIDTH,
+                num_agents=100, infectious_seed_pc=INFECTIOUS_PREVALENCE,
+                recovered_seed_pc=0.2, high_risk_pc=FRACTION_HI_RISK,
+                house_init="Random"):
+        # model is seeded with default parameters for infectious seed and high-risk percent
+>>>>>>> 086b4a27b1ba8ebc86229a48b6f3d185d5b91859
         # can also change defaults with user settable parameter slider in GUI
 
+        self.uid = next(self.id_gen)
         self.height = height # height and width of grid
         self.width = width
-        self.density = density
         self.num_agents = num_agents # number of agents to initializse
         self.infectious_seed_pc = infectious_seed_pc # percent of infectious agents at start of simulation
         self.recovered_seed_pc = recovered_seed_pc # percent of recovered agents at start of simulation
@@ -297,6 +327,7 @@ class Virus(Model):
         self.susceptible_count = 0
         self.exposed_count = 0
         self.recovered_count = 0
+        self.step_count = 0
 
         self.tick = 0
         self.people_dict = dict() # keys: house_ids, value: people_ids of people at that house
@@ -321,12 +352,64 @@ class Virus(Model):
         person_id = 0
         house_id = 2000
 
+<<<<<<< HEAD
         high_risk_houses = []
         low_risk_houses = []
 
         for cell in agents_per_cell:
             x = self.random.randrange(self.grid.width)
             y = self.random.randrange(self.grid.height)
+=======
+        # For uniform neighborhood, approximate with square packing of circles
+        # in a rectangle
+        # Getting indices of where houses should be
+        # Initialing array of tuples with random grid coordinates
+        num_houses = len(agents_per_cell)
+        house_locations = []
+        if house_init == "Neighborhood":
+            grid_area = self.grid.width * self.grid.height
+            circle_radius = math.sqrt(grid_area / (4.0 * num_houses))
+            circle_diameter = 2.0 * circle_radius
+            floor_radius = math.floor(circle_radius)
+            floor_diameter = math.floor(circle_diameter)
+            # number of houses for each row of grid
+            num_each_row = 1 + math.floor((self.grid.width - floor_radius) / floor_diameter)
+            # number of houses for each column of grid
+            num_each_col = 1 + math.floor((self.grid.height - floor_radius) / floor_diameter)
+            for j in range(num_each_col):
+                for i in range(num_each_row):
+                    house_locations.append((floor_radius + i * floor_diameter, floor_radius + j * floor_diameter))
+
+        # Initializing different household styles
+        # Neighborhood = households laid out in uniform pattern on grid
+        # Rural = households widely spread out
+        # Clusters = households grouped in two clusters with larger space in between
+        cell_counter = 0
+        for cell in agents_per_cell:
+            if house_init == "Random":
+                x = self.random.randrange(self.grid.width)
+                y = self.random.randrange(self.grid.height)
+            elif house_init == "Neighborhood":
+                x = house_locations[cell_counter][0]
+                y = house_locations[cell_counter][1]
+                cell_counter += 1
+            else: #house_init == "Clusters"
+                # Households will be created on first 9th and last 9th
+                # of grid (torus wrap turned off)
+                one_sixth_width = int(self.grid.width / 6)
+                x_low = self.random.randrange(one_sixth_width, 2*one_sixth_width)
+                x_high = self.random.randrange(4*one_sixth_width, 5*one_sixth_width)
+                x = random.choice([x_low, x_high])
+                one_sixth_height = int(self.grid.height / 6)
+                y_low = self.random.randrange(one_sixth_height, 2*one_sixth_height)
+                y_high = self.random.randrange(4*one_sixth_height, 5*one_sixth_height)
+                y = random.choice([y_low, y_high])
+
+            house = HouseAgent((x,y), self, house_id)
+            self.grid.place_agent(house, (x, y))
+            self.schedule.add(house)
+            house_id+=1
+>>>>>>> 086b4a27b1ba8ebc86229a48b6f3d185d5b91859
 
             people_here = []
             high_risk_house = False
@@ -360,6 +443,7 @@ class Virus(Model):
                 people_here.append(person_id)
                 person_id += 1
 
+<<<<<<< HEAD
             if high_risk_house == False:
                 low_risk_houses.append(house_id)
             else:
@@ -393,6 +477,18 @@ class Virus(Model):
                 {"recovered": "recovered_count"},
                 {"x": lambda m: m.pos[0], "y": lambda m: m.pos[1]})
         self.r_datacollector.collect(self)
+=======
+        self.datacollector = DataCollector(model_reporters={
+                             "Step": "step_count",
+                             "Susceptible": "susceptible_count",
+                             "Exposed": "exposed_count",
+                             "Infectious": "infectious_count",
+                             "Recovered": "recovered_count",
+                             "Dead": "dead_count",
+                             "Model Params": track_params,
+                             "Run": track_run})
+        self.datacollector.collect(self)
+>>>>>>> 086b4a27b1ba8ebc86229a48b6f3d185d5b91859
 
         self.running = True
 
@@ -407,14 +503,42 @@ class Virus(Model):
         self.susceptible_count = 0
         self.exposed_count = 0
         self.schedule.step()
+        self.step_count += 1
         # collect data
-        self.s_datacollector.collect(self)
-        self.e_datacollector.collect(self)
-        self.i_datacollector.collect(self)
-        self.r_datacollector.collect(self)
+        self.datacollector.collect(self)
 
         # run until no more agents are infectious
+<<<<<<< HEAD
         if self.infectious_count == 0 and self.exposed_count == 0:
             self.running = False
 
         self.tick += 1
+=======
+        # if self.infectious_count == 0 and self.exposed_count ==0:
+        #     self.running = False
+
+
+# code for batch runs
+
+# parameter lists for each parameter to be tested in batch run
+# BatchRunner runs every combination of parameters listed in br_params
+br_params = {"infectious_seed_pc": [0.01, 0.05, 0.1],
+             "recovered_seed_pc": [0.05, 0.1, 0.15, 0.2],
+             "high_risk_pc": [0.1, 0.2]}
+
+br = BatchRunner(Virus,
+                 br_params,
+                 iterations=1, # number of times to run each parameter combination
+                 max_steps=50, # number of steps for each model run, unless conditions are met
+                 model_reporters={"Data Collector": lambda m: m.datacollector})
+
+if __name__ == '__main__':
+    br.run_all()
+    br_df = br.get_model_vars_dataframe()
+    br_step_data = pd.DataFrame()
+    for i in range(len(br_df["Data Collector"])):
+        if isinstance(br_df["Data Collector"][i], DataCollector):
+            i_run_data = br_df["Data Collector"][i].get_model_vars_dataframe()
+            br_step_data = br_step_data.append(i_run_data, ignore_index=True)
+    br_step_data.to_csv("VirusModel_Step_Data.csv")
+>>>>>>> 086b4a27b1ba8ebc86229a48b6f3d185d5b91859
