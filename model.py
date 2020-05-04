@@ -43,17 +43,16 @@ def checkKey(dict, key):
 
     return val
 
-GRID_HEIGHT = 20
-GRID_WIDTH = 20
-
 def track_params(model):
     return (model.infectious_seed_pc,
             model.recovered_seed_pc,
-            model.high_risk_pc)
+            model.high_risk_pc,
+            model.house_init,
+            model.release_strat,
+            model.grid_area)
 
 def track_run(model):
     return model.uid
-
 
 class VirusModelAgent(Agent):
     '''
@@ -95,8 +94,8 @@ class VirusModelAgent(Agent):
             # Release people from quarantine
 
             if self.model.release_strat == "Random individual houses":
-                if checkKey(self.model.people_dict, (2000 + self.model.tick)) == "Present":
-                    people_to_release = self.model.people_dict[2000 + self.model.tick]
+                if checkKey(self.model.people_dict, (2500 + self.model.tick)) == "Present":
+                    people_to_release = self.model.people_dict[2500 + self.model.tick]
                     for person in people_to_release:
                         if self.unique_id == person:
                             self.at_home = False
@@ -105,7 +104,7 @@ class VirusModelAgent(Agent):
                 if self.model.tick == 0:
                     counter = len(self.model.people_dict)//2
                     for x in range(counter):
-                        people_to_release = self.model.people_dict[2000 + x]
+                        people_to_release = self.model.people_dict[2500 + x]
                         for person in people_to_release:
                             if self.unique_id == person:
                                 self.at_home = False
@@ -113,7 +112,7 @@ class VirusModelAgent(Agent):
                     counter = len(self.model.people_dict) - len(self.model.people_dict)//2
                     for x in range(counter):
                         x += len(self.model.people_dict)//2
-                        people_to_release = self.model.people_dict[2000 + x]
+                        people_to_release = self.model.people_dict[2500 + x]
                         for person in people_to_release:
                             if self.unique_id == person:
                                 self.at_home = False
@@ -256,20 +255,20 @@ class HouseAgent(Agent):
 
     def step(self):
         if self.model.release_strat == "Random individual houses":
-            if self.model.tick == (self.unique_id - 2000):
+            if self.model.tick == (self.unique_id - 2500):
                 self.people_home = False
         elif self.model.release_strat == "Random group of houses":
             if self.model.tick == 0:
                 counter = len(self.model.people_dict)//2
                 for x in range(counter):
-                    temp_id = 2000 + x
+                    temp_id = 2500 + x
                     if self.unique_id == temp_id:
                         self.people_home = False
             elif self.model.tick == 14:
                 counter = len(self.model.people_dict) - len(self.model.people_dict)//2
                 for x in range(counter):
                     x += len(self.model.people_dict)//2
-                    temp_id = 2000 + x
+                    temp_id = 2500 + x
                     if self.unique_id == temp_id:
                         self.people_home = False
         elif self.model.release_strat == "Low risk individuals":
@@ -307,6 +306,9 @@ class Virus(Model):
         # can also change defaults with user settable parameter slider in GUI
 
         self.uid = next(self.id_gen)
+        self.grid_area = grid_area
+        self.house_init = house_init
+        self.release_strat = release_strat
         if grid_area == "Demo":
             self.height = GRID_HEIGHT_DEMO # height and width of grid
             self.width = GRID_WIDTH_DEMO
@@ -508,21 +510,22 @@ class Virus(Model):
         #     self.running = False
 
         self.tick += 1
-        # if self.infectious_count == 0 and self.exposed_count ==0:
-        #     self.running = False
 
 
 # code for batch runs
 
 # parameter lists for each parameter to be tested in batch run
 # BatchRunner runs every combination of parameters listed in br_params
-br_params = {"infectious_seed_pc": [0.01, 0.05, 0.1],
-             "recovered_seed_pc": [0.05, 0.1, 0.15, 0.2],
-             "high_risk_pc": [0.1, 0.2]}
+br_params = {"infectious_seed_pc": [0.05],
+             "recovered_seed_pc": [0.1],
+             "high_risk_pc": [0.1, 0.2],
+             "grid_area": ["Small", "Large"],
+             "house_init": ["Random"],
+             "release_strat": ["Everyone release"]}
 
 br = BatchRunner(Virus,
                  br_params,
-                 iterations=1, # number of times to run each parameter combination
+                 iterations=2, # number of times to run each parameter combination
                  max_steps=50, # number of steps for each model run, unless conditions are met
                  model_reporters={"Data Collector": lambda m: m.datacollector})
 
