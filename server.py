@@ -136,7 +136,7 @@ chart = ChartModule([{"Label": "Susceptible", "Color": "#107AB0"},
 model_params = {
     "height": UserSettableParameter("slider", "Grid Height", grid_height, 5, 50, 5),
     "width": UserSettableParameter("slider", "Grid Width", grid_width, 5, 50, 5),
-    "num_agents": UserSettableParameter("slider", "Number of Agents", 100, 1, 2000, 5),
+    "num_agents": UserSettableParameter("slider", "Number of Agents", 1000, 1, 2000, 5),
     "infectious_seed_pc": UserSettableParameter("slider", "Initial fraction infectious", ip, 0.00, 1.0, 0.01),
     "recovered_seed_pc": UserSettableParameter("slider", "Initial fraction recovered", 0.1, 0.00, 1.0, 0.01),
     "high_risk_pc": UserSettableParameter("slider", "Percentage high-risk agents", 0.25, 0.00, 1.0, 0.05),

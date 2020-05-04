@@ -27,8 +27,8 @@ HI_RISK_SYMP_TRANSMISSION = 0.7 #agent is high-risk, infectious neighbor is symp
 HI_RISK_DEATH_RATE = 0.15
 LOW_RISK_DEATH_RATE = 0.01
 
-GRID_HEIGHT = 20
-GRID_WIDTH = 20
+GRID_HEIGHT = 100
+GRID_WIDTH = 100
 
 def track_params(model):
     return (model.infectious_seed_pc,
@@ -192,7 +192,7 @@ class Virus(Model):
     id_gen = itertools.count(1)
 
     def __init__(self, height=GRID_HEIGHT, width=GRID_WIDTH,
-                num_agents=100, infectious_seed_pc=INFECTIOUS_PREVALENCE,
+                num_agents=1000, infectious_seed_pc=INFECTIOUS_PREVALENCE,
                 recovered_seed_pc=0.2, high_risk_pc=FRACTION_HI_RISK,
                 house_init="Random"):
         # model is seeded with default parameters for infectious seed and high-risk percent
