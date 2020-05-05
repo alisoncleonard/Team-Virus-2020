@@ -11,6 +11,8 @@ from mesa.batchrunner import BatchRunner
 from mesa.batchrunner import BatchRunnerMP
 import itertools
 import pandas as pd
+import os
+import time
 
 # Assumptions of model, from Joshua Weitz
 EXPOSED_PERIOD = 4 #days
@@ -555,4 +557,9 @@ if __name__ == '__main__':
         if isinstance(br_df["Data Collector"][i], DataCollector):
             i_run_data = br_df["Data Collector"][i].get_model_vars_dataframe()
             br_step_data = br_step_data.append(i_run_data, ignore_index=True)
-    br_step_data.to_csv("/Users/shwu2259/GroupRotation/VirusModel_highmob_lowfrac.csv")
+
+    if os.path.exists('VirusModel_Step_Data.csv'):
+        br_step_data.to_csv('VirusModel_Step_Data_{}.csv'.format(int(time.time())))
+    else:
+        br_step_data.to_csv('VirusModel_Step_Data.csv')
+        #br_step_data.to_csv("/Users/shwu2259/GroupRotation/VirusModel_highmob_lowfrac.csv")
