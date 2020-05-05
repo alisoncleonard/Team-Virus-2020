@@ -92,13 +92,14 @@ class VirusModelAgent(Agent):
             self.model.susceptible_count += 1
         if self.compartment != "dead":
             # Release people from quarantine
-
             if self.model.release_strat == "Random individual houses":
-                if checkKey(self.model.people_dict, (2500 + self.model.tick)) == "Present":
-                    people_to_release = self.model.people_dict[2500 + self.model.tick]
-                    for person in people_to_release:
-                        if self.unique_id == person:
-                            self.at_home = False
+                if (self.model.tick % self.model.mobility) == 0:
+                    day = self.model.tick/self.model.mobility
+                    if checkKey(self.model.people_dict, (2500 + day)) == "Present":
+                        people_to_release = self.model.people_dict[2500 + day]
+                        for person in people_to_release:
+                            if self.unique_id == person:
+                                self.at_home = False
             elif self.model.release_strat == "Random group of houses":
                 # Release random first half of houses at 1st tick
                 if self.model.tick == 0:
@@ -108,7 +109,7 @@ class VirusModelAgent(Agent):
                         for person in people_to_release:
                             if self.unique_id == person:
                                 self.at_home = False
-                elif self.model.tick == 14:
+                elif self.model.tick == self.model.days_to_second_release*self.model.mobility:
                     counter = len(self.model.people_dict) - len(self.model.people_dict)//2
                     for x in range(counter):
                         x += len(self.model.people_dict)//2
@@ -120,7 +121,7 @@ class VirusModelAgent(Agent):
                 if self.model.tick == 0:
                     if self.risk_group == "low":
                         self.at_home = False
-                elif self.model.tick == 14:
+                elif self.model.tick == self.model.days_to_second_release*self.model.mobility:
                     if self.risk_group == "high":
                         self.at_home = False
             elif self.model.release_strat == "Low risk houses":
@@ -131,7 +132,7 @@ class VirusModelAgent(Agent):
                         for person in people_to_release:
                             if self.unique_id == person:
                                 self.at_home = False
-                if self.model.tick == 14:
+                if self.model.tick == self.model.days_to_second_release*self.model.mobility:
                     houses_to_release = self.model.house_dict["high risk houses"]
                     for house in houses_to_release:
                         people_to_release = self.model.people_dict[house]
@@ -197,7 +198,7 @@ class VirusModelAgent(Agent):
         '''
         # Calculates CDF of seeing agent's infection timeline given
         # mean exposure of EXPOSED_PERIOD days with standard deviation of 1 day
-        symptomaticProb = scipy.stats.norm.cdf(self.infection_timeline, EXPOSED_PERIOD, 1)
+        symptomaticProb = scipy.stats.norm.cdf(self.infection_timeline, EXPOSED_PERIOD*self.model.mobility, 1)
         # Using calculated probability, pulls updated compartment status from
         # Bernoulli distribution
         updatedCompartment = random.choices(["infectious_asymptomatic", "infectious_symptomatic"],
@@ -209,7 +210,7 @@ class VirusModelAgent(Agent):
         Determines if, given agent's risk group, the agent dies
         '''
         if self.compartment == "infectious_symptomatic":
-            switchCompProb = scipy.stats.norm.cdf(self.infection_timeline, SYMPTOMATIC_PERIOD, 1)
+            switchCompProb = scipy.stats.norm.cdf(self.infection_timeline, SYMPTOMATIC_PERIOD*self.model.mobility, 1)
             switchComp = random.choices(["switch", "infectious_symptomatic"],
                                         [switchCompProb, (1.0 - switchCompProb)])[0]
             if switchComp != "switch":
@@ -220,7 +221,7 @@ class VirusModelAgent(Agent):
                 else: #self.risk_group == "low"
                     deathProb = LOW_RISK_DEATH_RATE
         else: #self.compartment == "infectious_asymptomatic"
-            switchCompProb = scipy.stats.norm.cdf(self.infection_timeline, ASYMPTOMATIC_PERIOD, 1)
+            switchCompProb = scipy.stats.norm.cdf(self.infection_timeline, ASYMPTOMATIC_PERIOD*self.model.mobility, 1)
             switchComp = random.choices(["switch", "infectious_asymptomatic"],
                                         [switchCompProb, (1.0 - switchCompProb)])[0]
             if switchComp != "switch":
@@ -255,8 +256,10 @@ class HouseAgent(Agent):
 
     def step(self):
         if self.model.release_strat == "Random individual houses":
-            if self.model.tick == (self.unique_id - 2500):
-                self.people_home = False
+            if (self.model.tick % self.model.mobility) == 0:
+                day = self.model.tick/self.model.mobility
+                if day == (self.unique_id - 2500):
+                    self.people_home = False
         elif self.model.release_strat == "Random group of houses":
             if self.model.tick == 0:
                 counter = len(self.model.people_dict)//2
@@ -264,7 +267,7 @@ class HouseAgent(Agent):
                     temp_id = 2500 + x
                     if self.unique_id == temp_id:
                         self.people_home = False
-            elif self.model.tick == 14:
+            elif self.model.tick == self.model.days_to_second_release*self.model.mobility:
                 counter = len(self.model.people_dict) - len(self.model.people_dict)//2
                 for x in range(counter):
                     x += len(self.model.people_dict)//2
@@ -275,14 +278,14 @@ class HouseAgent(Agent):
             if self.model.tick == 0:
                 if self.high_risk == False:
                     self.people_home = False
-            if self.model.tick == 14:
+            if self.model.tick == self.model.days_to_second_release*self.model.mobility:
                 self.people_home = False
         elif self.model.release_strat == "Low risk houses":
             houses_to_release = []
             if self.model.tick == 0:
                 if self.high_risk == False:
                     self.people_home = False
-            elif self.model.tick == 14:
+            elif self.model.tick == self.model.days_to_second_release*self.model.mobility:
                 if self.high_risk == True:
                     self.people_home = False
         elif self.model.release_strat == "Everyone release":
@@ -301,7 +304,7 @@ class Virus(Model):
     def __init__(self, grid_area="Demo",
                 num_agents=100, infectious_seed_pc=INFECTIOUS_PREVALENCE,
                 recovered_seed_pc=0.2, high_risk_pc=FRACTION_HI_RISK,
-                house_init="Random", release_strat= "Random individual houses"):
+                house_init="Random", release_strat= "Random individual houses", mobility_speed = "low", weeks_to_second_release = 4):
         # model is seeded with default parameters
         # can also change defaults with user settable parameter slider in GUI
 
@@ -338,6 +341,15 @@ class Virus(Model):
         self.people_dict = dict() # keys: house_ids, value: people_ids of people at that house
         self.house_dict = dict() # keys: low/high risk houses, value: house_ids of corresponding houses
         self.release_strat = release_strat
+
+        if mobility_speed == "low":
+            self.mobility = 5
+        elif mobility_speed == "high":
+            self.mobility = 20
+        else:
+            self.mobility = 1
+
+        self.days_to_second_release = 7*weeks_to_second_release
 
         ### Set up agents and houses ###
         # First initialize vec defining number of agents per cell/house (between 1-4)
@@ -521,12 +533,13 @@ br_params = {"infectious_seed_pc": [0.05],
              "high_risk_pc": [0.1, 0.2],
              "grid_area": ["Small", "Large"],
              "house_init": ["Random"],
-             "release_strat": ["Everyone release"]}
+             "release_strat": ["Everyone release"],
+             "mobility_speed":["low", "high"]}
 
 br = BatchRunner(Virus,
                  br_params,
                  iterations=2, # number of times to run each parameter combination
-                 max_steps=50, # number of steps for each model run, unless conditions are met
+                 max_steps=50, # number of steps for each model run
                  model_reporters={"Data Collector": lambda m: m.datacollector})
 
 if __name__ == '__main__':
