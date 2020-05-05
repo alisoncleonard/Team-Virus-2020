@@ -143,8 +143,10 @@ model_params = {
     "release_strat": UserSettableParameter("choice", "Quarantine Release Strategy", value="Random individual houses",
                                         choices=["Everyone release", "Random group of houses", "Random individual houses", "Low risk individuals", "Low risk houses"]),
     "house_init": UserSettableParameter("choice", "Household Style", value="Random",
-                                        choices=["Random", "Neighborhood", "Clusters"])
-}
+                                        choices=["Random", "Neighborhood", "Clusters"]),
+    "mobility_speed": UserSettableParameter("choice", "Mobility", value = "low", choices = ["test", "low", "high"]),
+    "weeks_to_second_release": UserSettableParameter("choice", "Weeks til second release", value = 4, choices = [2, 4, 6, 8])
+    }
 
 if model_params["grid_area"].value == "Demo":
     grid_height = md.GRID_HEIGHT_DEMO
