@@ -16,7 +16,7 @@ import pandas as pd
 EXPOSED_PERIOD = 4 #days
 ASYMPTOMATIC_PERIOD = 6 #days
 SYMPTOMATIC_PERIOD = 10 #days
-FRACTION_SYMPTOMATIC = 0.1
+FRACTION_SYMPTOMATIC = 0.75
 FRACTION_HI_RISK = 0.25
 INFECTIOUS_PREVALENCE = 0.01
 LOW_RISK_ASYMP_TRANSMISSION = 0.25 #agent is low-risk, infectious neighbor is asymptomatic
@@ -539,15 +539,15 @@ br_params = {"num_agents": [1000],
              "high_risk_pc": [0.25],
              "grid_area": ["Small", "Large"],
              "house_init": ["Neighborhood"],
-             "release_strat": ["Everyone release", "Random group of houses", "Random individual houses", "Low risk individuals", "Low risk houses"],
+             "release_strat": ["Everyone release", "Random individual houses", "Low risk individuals", "Low risk houses"],
              "mobility_speed":["low", "high"],
-             "weeks_to_second_release": [2, 4, 8]}
+             "weeks_to_second_release": [2, 4]}
 
 br = BatchRunnerMP(Virus,
                    nr_processes=4,
                    variable_parameters=br_params,
-                   iterations=1, # number of times to run each parameter combination
-                   max_steps=5, # number of steps for each model run
+                   iterations=3, # number of times to run each parameter combination
+                   max_steps=2400, # number of steps for each model run
                    model_reporters={"Data Collector": lambda m: m.datacollector})
 
 if __name__ == '__main__':
