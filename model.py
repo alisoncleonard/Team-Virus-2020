@@ -558,4 +558,4 @@ if __name__ == '__main__':
         if isinstance(br_df["Data Collector"][i], DataCollector):
             i_run_data = br_df["Data Collector"][i].get_model_vars_dataframe()
             br_step_data = br_step_data.append(i_run_data, ignore_index=True)
-    br_step_data.to_csv("VirusModel_test2.csv")
+    br_step_data.to_csv("/Users/shwu2259/GroupRotation/VirusModel_lowmob_lowfrac.csv")
