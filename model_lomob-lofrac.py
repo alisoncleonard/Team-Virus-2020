@@ -230,10 +230,7 @@ class VirusModelAgent(Agent):
             if switchComp != "switch":
                 return switchComp
             else:
-                if self.risk_group == "high":
-                    deathProb = HI_RISK_DEATH_RATE
-                else: #self.risk_group == "low"
-                    deathProb = LOW_RISK_DEATH_RATE
+                deathProb = 0.0
         updatedCompartment = random.choices(["recovered", "dead"],
                                             [(1.0 - deathProb), deathProb])[0]
         return updatedCompartment
