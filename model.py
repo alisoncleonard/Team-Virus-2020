@@ -8,6 +8,7 @@ import scipy.stats
 import numpy as np
 import math
 from mesa.batchrunner import BatchRunner
+from mesa.batchrunner import BatchRunnerMP
 import itertools
 import pandas as pd
 
@@ -542,11 +543,12 @@ br_params = {"num_agents": [1000],
              "mobility_speed":["low", "high"],
              "weeks_to_second_release": [2, 4, 8]}
 
-br = BatchRunner(Virus,
-                 br_params,
-                 iterations=1, # number of times to run each parameter combination
-                 max_steps=5, # number of steps for each model run
-                 model_reporters={"Data Collector": lambda m: m.datacollector})
+br = BatchRunnerMP(Virus,
+                   nr_processes=4,
+                   variable_parameters=br_params,
+                   iterations=1, # number of times to run each parameter combination
+                   max_steps=5, # number of steps for each model run
+                   model_reporters={"Data Collector": lambda m: m.datacollector})
 
 if __name__ == '__main__':
     br.run_all()
@@ -556,4 +558,4 @@ if __name__ == '__main__':
         if isinstance(br_df["Data Collector"][i], DataCollector):
             i_run_data = br_df["Data Collector"][i].get_model_vars_dataframe()
             br_step_data = br_step_data.append(i_run_data, ignore_index=True)
-    br_step_data.to_csv("VirusModel_test.csv")
+    br_step_data.to_csv("VirusModel_test2.csv")
