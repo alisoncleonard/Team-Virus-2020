@@ -540,7 +540,7 @@ br_params = {"num_agents": [1000],
              "grid_area": ["Small", "Large"],
              "house_init": ["Neighborhood"],
              "release_strat": ["Everyone release", "Random individual houses", "Low risk individuals", "Low risk houses"],
-             "mobility_speed":["low", "high"],
+             "mobility_speed": ["high"],
              "weeks_to_second_release": [2, 4]}
 
 br = BatchRunnerMP(Virus,
