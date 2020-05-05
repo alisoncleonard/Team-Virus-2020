@@ -540,14 +540,14 @@ br_params = {"num_agents": [1000],
              "grid_area": ["Small", "Large"],
              "house_init": ["Neighborhood"],
              "release_strat": ["Everyone release", "Random individual houses", "Low risk individuals", "Low risk houses"],
-             "mobility_speed":["low", "high"],
+             "mobility_speed":["low"],
              "weeks_to_second_release": [2, 4]}
 
 br = BatchRunnerMP(Virus,
                    nr_processes=4,
                    variable_parameters=br_params,
                    iterations=3, # number of times to run each parameter combination
-                   max_steps=2400, # number of steps for each model run
+                   max_steps=600, # number of steps for each model run
                    model_reporters={"Data Collector": lambda m: m.datacollector})
 
 if __name__ == '__main__':
