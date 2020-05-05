@@ -8,6 +8,7 @@ import scipy.stats
 import numpy as np
 import math
 from mesa.batchrunner import BatchRunner
+from mesa.batchrunner import BatchRunnerMP
 import itertools
 import pandas as pd
 
@@ -15,7 +16,7 @@ import pandas as pd
 EXPOSED_PERIOD = 4 #days
 ASYMPTOMATIC_PERIOD = 6 #days
 SYMPTOMATIC_PERIOD = 10 #days
-FRACTION_SYMPTOMATIC = 0.1 
+FRACTION_SYMPTOMATIC = 0.1
 FRACTION_HI_RISK = 0.25
 INFECTIOUS_PREVALENCE = 0.01
 LOW_RISK_ASYMP_TRANSMISSION = 0.25 #agent is low-risk, infectious neighbor is asymptomatic
@@ -44,12 +45,14 @@ def checkKey(dict, key):
     return val
 
 def track_params(model):
-    return (model.infectious_seed_pc,
+    return (model.num_agents,
+            model.infectious_seed_pc,
             model.recovered_seed_pc,
             model.high_risk_pc,
             model.grid_area,
             model.house_init,
-            model.release_strat)
+            model.release_strat,
+            model.weeks_to_second_release)
 
 def track_run(model):
     return model.uid
@@ -304,7 +307,8 @@ class Virus(Model):
     def __init__(self, grid_area="Demo",
                 num_agents=100, infectious_seed_pc=INFECTIOUS_PREVALENCE,
                 recovered_seed_pc=0.2, high_risk_pc=FRACTION_HI_RISK,
-                house_init="Random", release_strat= "Random individual houses", mobility_speed = "low", weeks_to_second_release = 4):
+                house_init="Random", release_strat= "Random individual houses",
+                mobility_speed = "low", weeks_to_second_release = 4):
         # model is seeded with default parameters
         # can also change defaults with user settable parameter slider in GUI
 
@@ -312,6 +316,7 @@ class Virus(Model):
         self.grid_area = grid_area
         self.house_init = house_init
         self.release_strat = release_strat
+        self.weeks_to_second_release = weeks_to_second_release
         if grid_area == "Demo":
             self.height = GRID_HEIGHT_DEMO # height and width of grid
             self.width = GRID_WIDTH_DEMO
@@ -528,19 +533,22 @@ class Virus(Model):
 
 # parameter lists for each parameter to be tested in batch run
 # BatchRunner runs every combination of parameters listed in br_params
-br_params = {"infectious_seed_pc": [0.05],
-             "recovered_seed_pc": [0.1],
-             "high_risk_pc": [0.1, 0.2],
+br_params = {"num_agents": [1000],
+             "infectious_seed_pc": [0.01, 0.05],
+             "recovered_seed_pc": [0.01, 0.1, 0.23],
+             "high_risk_pc": [0.25],
              "grid_area": ["Small", "Large"],
-             "house_init": ["Random"],
-             "release_strat": ["Everyone release"],
-             "mobility_speed":["low", "high"]}
+             "house_init": ["Neighborhood"],
+             "release_strat": ["Everyone release", "Random group of houses", "Random individual houses", "Low risk individuals", "Low risk houses"],
+             "mobility_speed":["low", "high"],
+             "weeks_to_second_release": [2, 4, 8]}
 
-br = BatchRunner(Virus,
-                 br_params,
-                 iterations=2, # number of times to run each parameter combination
-                 max_steps=50, # number of steps for each model run
-                 model_reporters={"Data Collector": lambda m: m.datacollector})
+br = BatchRunnerMP(Virus,
+                   nr_processes=4,
+                   variable_parameters=br_params,
+                   iterations=1, # number of times to run each parameter combination
+                   max_steps=5, # number of steps for each model run
+                   model_reporters={"Data Collector": lambda m: m.datacollector})
 
 if __name__ == '__main__':
     br.run_all()
@@ -550,4 +558,4 @@ if __name__ == '__main__':
         if isinstance(br_df["Data Collector"][i], DataCollector):
             i_run_data = br_df["Data Collector"][i].get_model_vars_dataframe()
             br_step_data = br_step_data.append(i_run_data, ignore_index=True)
-    br_step_data.to_csv("VirusModel_Step_Data.csv")
+    br_step_data.to_csv("VirusModel_test2.csv")
