@@ -533,20 +533,13 @@ class Virus(Model):
 # parameter lists for each parameter to be tested in batch run
 # BatchRunner runs every combination of parameters listed in br_params
 br_params = {"num_agents": [1000],
-             "infectious_seed_pc": [0.01, 0.05],
-             "recovered_seed_pc": [0.01, 0.1, 0.23],
-             "high_risk_pc": [0.25],
-             "grid_area": ["Small", "Large"],
-             "house_init": ["Neighborhood"],
-             "release_strat": ["Everyone release", "Random individual houses", "Low risk individuals", "Low risk houses"],
-             "mobility_speed": ["high"],
-             "weeks_to_second_release": [2, 4]}
+             "infectious_seed_pc": [0.01, 0.05]}
 
 br = BatchRunnerMP(Virus,
                    nr_processes=4,
                    variable_parameters=br_params,
-                   iterations=3, # number of times to run each parameter combination
-                   max_steps=2400, # number of steps for each model run
+                   iterations=1, # number of times to run each parameter combination
+                   max_steps=5, # number of steps for each model run
                    model_reporters={"Data Collector": lambda m: m.datacollector})
 
 if __name__ == '__main__':
