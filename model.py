@@ -535,19 +535,19 @@ class Virus(Model):
 # BatchRunner runs every combination of parameters listed in br_params
 br_params = {"num_agents": [1000],
              "infectious_seed_pc": [0.01, 0.05],
-             "recovered_seed_pc": [0.01, 0.1, 0.23],
+             "recovered_seed_pc": [0.01],
              "high_risk_pc": [0.25],
              "grid_area": ["Small", "Large"],
              "house_init": ["Neighborhood"],
-             "release_strat": ["Everyone release", "Random individual houses", "Low risk individuals", "Low risk houses"],
+             "release_strat": ["Everyone release"],
              "mobility_speed": ["high"],
-             "weeks_to_second_release": [2, 4]}
+             "weeks_to_second_release": [2]}
 
 br = BatchRunnerMP(Virus,
                    nr_processes=4,
                    variable_parameters=br_params,
-                   iterations=3, # number of times to run each parameter combination
-                   max_steps=2400, # number of steps for each model run
+                   iterations=1, # number of times to run each parameter combination
+                   max_steps=4, # number of steps for each model run
                    model_reporters={"Data Collector": lambda m: m.datacollector})
 
 if __name__ == '__main__':
@@ -558,4 +558,4 @@ if __name__ == '__main__':
         if isinstance(br_df["Data Collector"][i], DataCollector):
             i_run_data = br_df["Data Collector"][i].get_model_vars_dataframe()
             br_step_data = br_step_data.append(i_run_data, ignore_index=True)
-    br_step_data.to_csv("/Users/shwu2259/GroupRotation/VirusModel_highmob_lowfrac.csv")
+    br_step_data.to_csv("VirusModel_test.csv")
