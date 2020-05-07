@@ -1,6 +1,9 @@
 install.packages("ggplot2")
 install.packages("dplyr")
 install.packages("RColorBrewer")
+install.packages("gganimate")
+install.packages("gifski")
+install.packages("av")
 #install.packages("viridis")      #from R-graph-gallery (for appearance)
 #install.packages("hrbrthemes")   #from R-graph-gallery (for appearance)
 
@@ -8,6 +11,9 @@ install.packages("RColorBrewer")
 library(ggplot2)
 library(dplyr)
 library(RColorBrewer)
+library(gganimate)
+library(gifski)
+library(av)
 #library(viridis)     #from R-graph-gallery (for appearance)
 #library(hrbrthemes)  #from R-graph-gallery (for appearance)
 
@@ -98,6 +104,68 @@ ggplot() +
   #      axis.text.x = element_text(size = 15, hjust = 0.5, vjust = 0.5),
   #      axis.title.y = element_text(size = 20, hjust = 0.5, vjust = 0.5),
   #      axis.text.y = element_text(size = 15, hjust = 0.5, vjust = 0.5)) +
+  
+# Save plot
+dev.off()
+
+
+
+####start of trying to make washington post graphs (stacked area chart)
+#subset data to agent types
+summarise_sub_1 = mean_param_1[,c(-5,-8, -9, -10, -11 )]
+summarise_sub_2 = mean_param_2[,c(-5,-8, -9, -10, -11 )]
+summarise_sub_3 = mean_param_3[,c(-5,-8, -9, -10, -11 )]
+summarise_sub_4 = mean_param_4[,c(-5,-8, -9, -10, -11 )]
+# Compute percentages with dplyr
+agent_percentage <- summarise_sub_1  %>%
+  group_by(Step) %>%
+  summarise(n = sum(value)) %>%
+  mutate(percentage = n / sum(n))
+
+#further subset data and prepare for rbind
+sum_sub_sus_1 = summarise_sub_1[,c(-3, -4, -5, -6)]
+sum_sub_sus_1['agent'] = 'susceptible'
+colnames(sum_sub_sus_1) = c("Step", "number", "agent")
+
+sum_sub_inf_1 = summarise_sub_1[,c(-3, -2, -5, -6)]
+sum_sub_inf_1['agent'] = 'infectious'
+colnames(sum_sub_inf_1) = c("Step", "number", "agent")
+
+sum_sub_exp_1 = summarise_sub_1[,c(-2, -4, -5, -6)]
+sum_sub_exp_1['agent'] = 'exposed'
+colnames(sum_sub_exp_1) = c("Step", "number", "agent")
+  
+sum_sub_dead_1 = summarise_sub_1[,c(-3, -2, -5, -4)]
+sum_sub_dead_1['agent'] = 'dead'
+colnames(sum_sub_dead_1) = c("Step", "number", "agent")
+
+sum_sub_rec_1 = summarise_sub_1[,c(-3, -2, -4, -6)]
+sum_sub_rec_1['agent'] = 'recovered'
+colnames(sum_sub_rec_1) = c("Step", "number", "agent")
+
+#merge all above
+z_merged = rbind(sum_sub_sus_1, sum_sub_inf_1, sum_sub_exp_1, sum_sub_dead_1, sum_sub_rec_1)
+
+# Compute percentages with dplyr
+agent_percentage <- z_merged  %>%
+  group_by(Step, agent) %>%
+  summarise(n = sum(number)) %>%
+  mutate(percentage = n / sum(n))
+
+#plot and save as gif
+gif_plot = ggplot(agent_percentage, aes(x=Step, y=percentage, fill=agent)) + 
+  geom_area(alpha=0.6 , size=1, colour="black") + 
+  transition_reveal(Step) 
+#save as gif
+animate(gif_plot, duration = 5, fps = 20, width = 200, height = 200, renderer = gifski_renderer())
+anim_save("test.gif")
+
+
+#plot normal (no animation)
+pdf(file = paste0(prefix, "_stacked_area.pdf"), width = 24, height = 12)
+#plot
+ggplot(agent_percentage, aes(x=Step, y=percentage, fill=agent)) + 
+  geom_area(alpha=0.6 , size=1, colour="black")
   
 # Save plot
 dev.off()
